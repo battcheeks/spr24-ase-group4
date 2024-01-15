@@ -2,8 +2,9 @@
 # Utility Class for helper functions such as csv reader, etc.
 import ast
 import re, fileinput
+import math, random
 
-class Utitlity:
+class Utility:
   def __init__(self) -> None:
     pass
 
@@ -19,3 +20,16 @@ class Utitlity:
     # literal_eval will convert the string to appropriate data type and the exception is when x is a string.
     try : return ast.literal_eval(x)
     except Exception: return x.strip()
+
+  def rnd(n, ndecs=None):
+    if not isinstance(n, (int, float)):
+        return n
+    if n == math.floor(n):
+        return n
+    mult = 10 ** (ndecs or 2)
+    return math.floor(n * mult + 0.5) / mult
+  
+  def shuffle(t):
+    u = t[:]
+    random.shuffle(u)
+    return u
