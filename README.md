@@ -1,1 +1,3 @@
-# spr24-ase-group4
+# CSC591 AUTOMATED SOFTWARE ENGINEERING : GROUP 04
+
+Assignment submissions for Spring 2024 term.
