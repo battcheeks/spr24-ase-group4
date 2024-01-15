@@ -14,7 +14,7 @@ class NUM:
 
     # --UPDATE
     # add()
-    def add(self, x, d):
+    def add(self, x):
         if x != "?":
             self.n += 1
             d = x - self.mu
