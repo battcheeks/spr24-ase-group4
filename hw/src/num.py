@@ -34,7 +34,7 @@ class NUM:
     def div(self):
         return 0 if self.n < 2 else (self.m2 / (self.n - 1))**0.5
 
-    # small() --to ignore for hw2
+    # small()
     def small(self):
         return self.cohen * self.div()
 

@@ -30,6 +30,6 @@ class SYM:
             e -= v / self.n * math.log2(v / self.n)
         return e
 
-# small() --to ignore for hw2
+# small()
     def small(self):
         return 0
