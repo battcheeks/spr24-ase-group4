@@ -52,7 +52,7 @@ class DATA:
     
     def stats(self, cols=None, fun=None, ndivs=None):
         u = {".N": len(self.rows)}
-        print(self.cols.names.cells)
+        #print(self.cols.names.cells)
         columns_to_iterate = getattr(self.cols, cols or "y", [])
         for col in columns_to_iterate:
             value = getattr(type(col), fun or "mid")(col)
@@ -107,6 +107,6 @@ class DATA:
                 rest.append(row)
         return DATA(best), DATA(rest)
     
-data = DATA(src='C:/Users/tekem/Documents/Manali/NCSU_Masters/SEM2_Spring2024/CSC591_ASE/spr24-ase-group4/hw/data/auto93.csv')
+#data = DATA(src='../data/auto93.csv')
 
-print(data.stats())
+#print(data.stats())
