@@ -107,6 +107,6 @@ class DATA:
                 rest.append(row)
         return DATA(best), DATA(rest)
     
-data = DATA(src='C:/Users/tekem/Documents/Manali/NCSU_Masters/SEM2_Spring2024/CSC591_ASE/spr24-ase-group4/hw/data/auto93.csv')
+data = DATA(src='../data/auto93.csv')
 
 print(data.stats())
