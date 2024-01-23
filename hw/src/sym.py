@@ -33,3 +33,7 @@ class SYM:
 # small()
     def small(self):
         return 0
+
+#like()
+    def like(self, x, prior):
+        return ((self.has.get(x, 0) or 0) + self.m * prior) / (self.n + self.m)
