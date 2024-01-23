@@ -71,7 +71,7 @@ class Tests():
         else:
             print("Test Failed!")
             
-    def test_eg_bayes():
+    def test_eg_bayes(self):
         wme = {'acc': 0, 'datas': [], 'tries': 0, 'n': 0}
         data = DATA("../data/diabetes.csv", lambda data, t: learn(data, t, wme))
         print(wme['acc'] / wme['tries'])
@@ -92,3 +92,5 @@ class Tests():
             i()
             
 test = Tests()
+print(test.test_eg_bayes())
+# test.run_all_tests()

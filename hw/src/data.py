@@ -18,12 +18,19 @@ class DATA:
             for x in self.util.l_csv(file=src):
                 self.add(x, fun)
         else:
-            for _, x in enumerate(src or []):
+            print()
+            ## also did some debugging here.
+            for x in (src or []):
                 self.add(x, fun)
         return self
 
     def add(self, t, fun=None):
-        row = ROW(t) if type(t) is list else t.cells
+        # Made changes to the following block of code
+        if hasattr(t, 'cells'):
+            row = t
+        else:
+            row = ROW(t)
+        # row = ROW(t) if type(t) is list else t.cells
         # row = t if t.cells else ROW(t)  Check line 182 might be different.
         if self.cols:
             if fun:
