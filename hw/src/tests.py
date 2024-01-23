@@ -1,6 +1,7 @@
 from sym import SYM 
 from num import NUM 
 from data import DATA
+from learn import learn
 import random
 
 class Tests():
@@ -57,6 +58,24 @@ class Tests():
         mu, sd = e.mid(), e.div()
         print("Python NUM Test2 Passed:", 9.8 < mu < 10.2 and 1.9 < sd < 2.4)
         print("   - Values Calulated: ", round(mu, 3), round(sd, 3))
+    
+    def test_eg_stats(self):
+        data = DATA("../data/auto93.csv")
+        stats_result = data.stats()
+        expected_result = "{'.N': 398, 'Lbs-': 2970.42, 'Acc+': 15.57, 'Mpg+': 23.84}"
+        print("Actual Result:", str(stats_result))
+        print("Expected Result:", expected_result)
+        
+        if str(stats_result) == expected_result:
+            print("Test Passed!")
+        else:
+            print("Test Failed!")
+            
+    def test_eg_bayes():
+        wme = {'acc': 0, 'datas': [], 'tries': 0, 'n': 0}
+        data = DATA("../data/diabetes.csv", lambda data, t: learn(data, t, wme))
+        print(wme['acc'] / wme['tries'])
+        return wme['acc'] / wme['tries'] > 0.72
         
     ## Running all the tests as per Class ##
     
@@ -71,3 +90,5 @@ class Tests():
     def run_all_tests(self):
         for i in self.all:
             i()
+            
+test = Tests()
