@@ -18,18 +18,23 @@ class DATA:
             for x in self.util.l_csv(file=src):
                 self.add(x, fun)
         else:
-            print()
+            # for attr in dir(src):
+            #     print("obj.%s = %r" % (attr, getattr(src, attr)))
+            # print(src.cells)
             ## also did some debugging here.
             for x in (src or []):
                 self.add(x, fun)
+            # self.add(src, fun)
         return self
 
     def add(self, t, fun=None):
         # Made changes to the following block of code
+        # print("Before", t)
         if hasattr(t, 'cells'):
             row = t
         else:
             row = ROW(t)
+        # print("After", row)
         # row = ROW(t) if type(t) is list else t.cells
         # row = t if t.cells else ROW(t)  Check line 182 might be different.
         if self.cols:
@@ -59,7 +64,7 @@ class DATA:
     
     def stats(self, cols=None, fun=None, ndivs=None):
         u = {".N": len(self.rows)}
-        #print(self.cols.names.cells)
+        # print(self.rows)
         columns_to_iterate = getattr(self.cols, cols or "y", [])
         for col in columns_to_iterate:
             value = getattr(type(col), fun or "mid")(col)
