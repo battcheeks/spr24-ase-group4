@@ -19,7 +19,7 @@ class ROW:
     
     #like()
     def like(self,data, n, nHypotheses):
-        the = {'k':1}
+        the = {'k':4} # manually added
         prior = (len(data.rows) + the['k']) / (n + the['k'] * nHypotheses)
         out = math.log(prior)
         for col in data.cols.x:
