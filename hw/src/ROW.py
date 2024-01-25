@@ -7,8 +7,9 @@ class ROW:
     #likes()
     def likes(self, datas):
         n, nHypotheses = 0, 0
+        most = None
         for k, data in datas.items():
-            n += len(data['rows'])
+            n += len(data.rows)
             nHypotheses += 1
         for k, data in datas.items():
             tmp = self.like(data, n, nHypotheses)
@@ -18,10 +19,11 @@ class ROW:
     
     #like()
     def like(self,data, n, nHypotheses):
-        prior = (len(data['rows']) + the.k) / (n + the.k * nHypotheses)
+        the = {'k':1}
+        prior = (len(data.rows) + the['k']) / (n + the['k'] * nHypotheses)
         out = math.log(prior)
-        for _, col in data['cols']['x'].items():
-            v = self.cells[col['at']]
+        for col in data.cols.x:
+            v = self.cells[col.at]
             if v != "?":
                 inc = col.like(v, prior)
                 out += math.log(inc)

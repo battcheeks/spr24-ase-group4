@@ -8,7 +8,7 @@ class Cols:
         self.all = []
         self.x = []
         self.y = []
-        self.target_class = None
+        self.klass = None
 
         for index, name in enumerate(row.cells):
             col = NUM(name, index) if re.match("^[A-Z]", name) else SYM(name, index)
@@ -16,7 +16,7 @@ class Cols:
 
             if not name.endswith("X"):
                 if name.endswith("!"):
-                    self.target_class = col
+                    self.klass = col
 
                 if re.search("[!+-]$", name):
                     self.y.append(col)
