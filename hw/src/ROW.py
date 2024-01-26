@@ -5,22 +5,21 @@ class ROW:
         self.cells = cells
     
     #likes()
-    def likes(self, datas):
+    def likes(self, datas, the):
         n, nHypotheses = 0, 0
         most = None
         for k, data in datas.items():
             n += len(data.rows)
             nHypotheses += 1
         for k, data in datas.items():
-            tmp = self.like(data, n, nHypotheses)
+            tmp = self.like(data, n, nHypotheses, the)
             if most is None or tmp > most:
                 most, out = tmp, k
         return out, most
     
     #like()
-    def like(self,data, n, nHypotheses):
-        the = {'k':1} # manually added
-        prior = (len(data.rows) + the['k']) / (n + the['k'] * nHypotheses)
+    def like(self,data, n, nHypotheses, the):
+        prior = (len(data.rows) + the.k) / (n + the.k * nHypotheses)
         out = math.log(prior)
         for col in data.cols.x:
             v = self.cells[col.at]

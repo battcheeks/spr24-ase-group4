@@ -5,7 +5,10 @@ from learn import learn
 import random
 
 class Tests():
-    def __init__(self) -> None:
+    def __init__(self, the) -> None:
+        ## Getting all the variables from the arguments.
+        self.the = the
+        
         self.all = [self.test_sym_1, self.test_sym_2, self.test_sym_3, self.test_num_1, self.test_num_2, self.test_num_3]
         self.num = [self.test_num_1, self.test_num_2, self.test_num_3]
         self.sym = [self.test_sym_1, self.test_sym_2, self.test_sym_3]
@@ -73,8 +76,9 @@ class Tests():
             
     def test_eg_bayes(self):
         wme = {'acc': 0, 'datas': [], 'tries': 0, 'n': 0}
-        data = DATA("../data/diabetes.csv", lambda data, t: learn(data, t, wme))
-        print(wme['acc'] / wme['tries'])
+        data = DATA(self.the.file, lambda data, t: learn(data, t, wme, self.the))
+        print("File Used :", self.the.file)
+        print("Accurary :", wme['acc'] / wme['tries'] * 100, "%")
         return wme['acc'] / wme['tries'] > 0.72
         
     ## Running all the tests as per Class ##

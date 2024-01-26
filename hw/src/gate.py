@@ -22,15 +22,23 @@ from tests import Tests
 
 def main():
     parser = argparse.ArgumentParser(description="Perform statistics on a CSV file.")
-    parser.add_argument("-f", "--file", help="Path to the CSV file.")
-    parser.add_argument("-t", "--task", help="Star up action.")
+    parser.add_argument("-f", "--file", help="csv data file name              = '../data/diabetes.csv'")
+    parser.add_argument("-t", "--task", help="start up action                 = 'help' ")
+    parser.add_argument("-k","-k", type=int, help="low class frequency kludge      = 1")
     args = parser.parse_args()
-
+    
+    # Initializing the default value of k
+    if(not args.k): args.k = 1
+    if(not args.file): args.file = "../data/diabetes.csv"
+    
+    
     # Load data from CSV file
-    data = DATA(src=args.file or "../data/diabetes.csv")
-    print(args.file)
+    data = DATA(src=args.file)
+    
+    # Testing arguments.
+    # print(args)
     # Load test cases
-    test = Tests()
+    test = Tests(args)
 
     # Perform the specified task
     if args.task == "stats":

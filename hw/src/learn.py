@@ -1,6 +1,6 @@
 from data import DATA
 
-def learn(data, row, my):
+def learn(data, row, my, the):
     my['n'] += 1
     kl = row.cells[data.cols.klass.at]
     
@@ -9,7 +9,7 @@ def learn(data, row, my):
     
     if my['n'] > 10:
         my['tries'] += 1
-        my['acc'] += 1 if kl == row.likes(my['datas'])[0] else 0
+        my['acc'] += 1 if kl == row.likes(my['datas'], the)[0] else 0
     
     if not my['datas']:
         my['datas'] = {}
