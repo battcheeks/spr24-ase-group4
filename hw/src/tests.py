@@ -91,7 +91,7 @@ class Tests():
         for i in self.all:
             i()
             
-test = Tests()
-print(test.test_eg_bayes())
+# test = Tests()
+# print(test.test_eg_bayes())
 # test.run_all_tests()
 # test.test_eg_stats()

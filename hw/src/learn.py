@@ -9,7 +9,7 @@ def learn(data, row, my):
     
     if my['n'] > 10:
         my['tries'] += 1
-        my['acc'] += 1 if kl == row.likes(my['datas']) else 0
+        my['acc'] += 1 if kl == row.likes(my['datas'])[0] else 0
     
     if not my['datas']:
         my['datas'] = {}
