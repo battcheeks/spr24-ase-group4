@@ -18,6 +18,7 @@ class ROW:
         return out, most
     
     #like()
+
     def like(self,data, n, nHypotheses):
         prior = (len(data.rows) + self.the.k) / (n + self.the.k * nHypotheses)
         out = math.log(prior)
