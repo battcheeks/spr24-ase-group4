@@ -15,7 +15,7 @@ class Tests():
         pass
     
     def test_sym_1(self):
-        s = SYM()
+        s = SYM(self.the)
         for x in [4, 4, 3, 3, 5, 3, 3]:
             s.add(x)
         mode, e = s.mid(), s.div()
@@ -23,7 +23,7 @@ class Tests():
         print("   - Values Calulated: ", mode, e)
 
     def test_sym_2(self):
-        s = SYM()
+        s = SYM(self.the)
         for x in [1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5]:
             s.add(x)
         mode, e = s.mid(), s.div()
@@ -31,7 +31,7 @@ class Tests():
         print("   - Values Calulated: ", mode, e)
         
     def test_sym_3(self):
-        s = SYM()
+        s = SYM(self.the)
         for x in [1, 2, 2, 2, 3, 3, 1, 3, 3, 1]:
             s.add(x)
         mode, e = s.mid(), s.div()
@@ -39,7 +39,7 @@ class Tests():
         print("   - Values Calulated: ", mode, e)
 
     def test_num_1(self):
-        e = NUM()
+        e = NUM(self.the)
         for _ in range(1000):
             e.add(random.normalvariate(5, 1))
         mu, sd = e.mid(), e.div()
@@ -47,7 +47,7 @@ class Tests():
         print("   - Values Calulated: ", round(mu, 3), round(sd, 3))
 
     def test_num_2(self):
-        e = NUM()
+        e = NUM(self.the)
         for _ in range(1000):
             e.add(random.normalvariate(15, 3))
         mu, sd = e.mid(), e.div()
@@ -55,7 +55,7 @@ class Tests():
         print("   - Values Calulated: ", round(mu, 3), round(sd, 3))
     
     def test_num_3(self):
-        e = NUM()
+        e = NUM(self.the)
         for _ in range(1000):
             e.add(random.normalvariate(10, 2))
         mu, sd = e.mid(), e.div()
@@ -63,7 +63,7 @@ class Tests():
         print("   - Values Calulated: ", round(mu, 3), round(sd, 3))
     
     def test_eg_stats(self):
-        data = DATA("../data/auto93.csv")
+        data = DATA(self.the, "../data/auto93.csv")
         stats_result = data.stats()
         expected_result = "{'.N': 398, 'Lbs-': 2970.42, 'Acc+': 15.57, 'Mpg+': 23.84}"
         print("Actual Result:", str(stats_result))
@@ -76,10 +76,20 @@ class Tests():
             
     def test_eg_bayes(self):
         wme = {'acc': 0, 'datas': [], 'tries': 0, 'n': 0}
-        data = DATA(self.the.file, lambda data, t: learn(data, t, wme, self.the))
+        data = DATA(self.the, self.the.file, lambda data, t: learn(data, t, wme, self.the))
         print("File Used :", self.the.file)
         print("Accurary :", wme['acc'] / wme['tries'] * 100, "%")
         return wme['acc'] / wme['tries'] > 0.72
+    
+    def test_km(self):
+        print("#%4s\t%s\t%s" % ("acc", "k", "m"))
+        for k in range(4):
+            for m in range(4):
+                self.the.k = k
+                self.the.m = m
+                wme = {'acc': 0, 'datas': {}, 'tries': 0, 'n': 0}
+                data = DATA(self.the, "../data/soybean.csv", lambda data, t: learn(data, t, wme, self.the))
+                print("%5.2f\t%s\t%s" % (wme['acc'] / wme['tries'], k, m))
         
     ## Running all the tests as per Class ##
     

@@ -25,15 +25,17 @@ def main():
     parser.add_argument("-f", "--file", help="csv data file name              = '../data/diabetes.csv'")
     parser.add_argument("-t", "--task", help="start up action                 = 'help' ")
     parser.add_argument("-k","-k", type=int, help="low class frequency kludge      = 1")
+    parser.add_argument("-m","-m", type=int, help="low attribute frequency kludge  = 2")
     args = parser.parse_args()
     
     # Initializing the default value of k
     if(not args.k): args.k = 1
+    if(not args.m): args.m = 2
     if(not args.file): args.file = "../data/diabetes.csv"
     
     
     # Load data from CSV file
-    data = DATA(src=args.file)
+    data = DATA(args, src=args.file)
     
     # Testing arguments.
     # print(args)
@@ -51,6 +53,8 @@ def main():
         test.run_sym_tests()
     elif args.task == "bayes":
         test.test_eg_bayes()
+    elif args.task == "km":
+        test.test_km()
     elif args.task == "all":
         test.run_all_tests()
     else:

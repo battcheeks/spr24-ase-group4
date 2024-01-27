@@ -1,13 +1,14 @@
 import math
 #define class and initialize
 class SYM:
-    def __init__(self, s=None, n=None):
+    def __init__(self, the, s=None, n=None):
         self.txt = s or " "
         self.at = n or 0
         self.n = 0
         self.has = {}
         self.mode = None
         self.most = 0
+        self.the = the
 
 # --UPDATE
 # add()
@@ -36,4 +37,11 @@ class SYM:
 
 #like()
     def like(self, x, prior):
-        return ((self.has.get(x, 0) or 0) + self.m * prior) / (self.n + self.m)
+        try:
+            # print(self.n)
+            return ((self.has.get(x, 0) or 0) + self.the.m * prior) / (self.n + self.the.m)
+        except ZeroDivisionError :
+            print(self.has.get(x, 0))
+            print(prior)
+            print(self.the.m)
+            print(self.n)

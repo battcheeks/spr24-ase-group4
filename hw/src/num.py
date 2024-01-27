@@ -2,7 +2,7 @@
 class NUM:
     cohen = 0.35
     #constructor for NUM
-    def __init__(self, s=None, n=None):
+    def __init__(self, the, s=None, n=None):
             self.txt = s or " "
             self.at = n or 0
             self.n = 0
@@ -11,6 +11,7 @@ class NUM:
             self.hi = float("-inf")
             self.lo = float("inf")
             self.heaven = 0 if (s or "").endswith("-") else 1
+            self.the = the
 
     # --UPDATE
     # add()
