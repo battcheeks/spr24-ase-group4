@@ -37,11 +37,9 @@ class SYM:
 
 #like()
     def like(self, x, prior):
-        try:
-            # print(self.n)
+
+        # print(self.n)
+        if(self.n + self.the.m == 0):
+            return 0
+        else:
             return ((self.has.get(x, 0) or 0) + self.the.m * prior) / (self.n + self.the.m)
-        except ZeroDivisionError :
-            print(self.has.get(x, 0))
-            print(prior)
-            print(self.the.m)
-            print(self.n)
