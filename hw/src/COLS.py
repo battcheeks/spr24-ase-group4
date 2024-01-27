@@ -3,6 +3,7 @@ from sym import SYM
 import re
 
 class Cols:
+
     def __init__(self, the, row):
         self.names = row
         self.all = []
@@ -31,4 +32,3 @@ class Cols:
 
     def __repr__(self):
         return f"Cols(names={self.names})"
-    
