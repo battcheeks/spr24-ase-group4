@@ -30,6 +30,6 @@ class ROW:
                 try:
                     out += math.log(inc)
                 except ValueError:
-                    out += 0.0001
+                    return 0.0
 
         return math.exp(1) ** out
