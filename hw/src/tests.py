@@ -3,16 +3,22 @@ from num import NUM
 from data import DATA
 from learn import learn
 import random
+import math
+from Utility import Utility
 
 class Tests():
     def __init__(self, the) -> None:
         ## Getting all the variables from the arguments.
         self.the = the
+        self.util = Utility()
         
         self.all = [self.test_sym_1, self.test_sym_2, self.test_sym_3, self.test_num_1, self.test_num_2, self.test_num_3]
         self.num = [self.test_num_1, self.test_num_2, self.test_num_3]
         self.sym = [self.test_sym_1, self.test_sym_2, self.test_sym_3]
         pass
+
+    def reset_seed(self):
+        random.seed(self.the.seed)
     
     def test_sym_1(self):
         s = SYM(self.the)
@@ -91,6 +97,47 @@ class Tests():
                 data = DATA(self.the, "../data/soybean.csv", lambda data, t: learn(data, t, wme, self.the))
                 print("%5.2f\t%s\t%s" % (wme['acc'] / wme['tries'], k, m))
         
+    def test_gate(self):
+        self.reset_seed()
+        budget0 = 4
+        budget = 10
+        some = 0.5
+
+        d = DATA(self.the, self.the.file)
+
+        def sayd(row, txt):
+            distance_to_heaven = self.util.rnd(row.d2h(d))
+            print("{0} {1} {2}".format(str(row.cells), txt, distance_to_heaven))
+
+        def say(row, txt):
+            print("{0} {1}".format(str(row.cells), txt))
+
+        print("{0} {1} {2}".format(str(d.cols.names), "about", "d2h"))
+        print("#overall")
+        sayd(d.mid(), "mid")
+        say(d.div(), "div")
+        say(d.small(), "small=div*" + str(self.the.cohen))
+
+        print("#generality")
+        stats, bests = d.gate(budget0, budget, some)
+        for index, stat in enumerate(stats):
+            sayd(stat, index + budget0)
+
+        print("#specifically")
+        for index, best in enumerate(bests):
+            sayd(best, index + budget0)
+
+        print("#optimum")
+        d.rows.sort(key=lambda a: a.d2h(d))
+        sayd(d.rows[0], len(d.rows))
+
+        print("#random")
+        random_rows = self.util.shuffle(d.rows)
+        random_rows = self.util.slice(random_rows, 1, math.log(0.05) / math.log(1 - self.the.cohen / 6))
+        random_rows.sort(key=lambda a: a.d2h(d))
+        sayd(random_rows[0])
+
+
     ## Running all the tests as per Class ##
     
     def run_num_tests(self):

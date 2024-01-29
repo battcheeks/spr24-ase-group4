@@ -63,6 +63,8 @@ def main():
         test.test_eg_bayes()
     elif args.task == "km":
         test.test_km()
+    elif args.task == "gate":
+        test.test_gate()
     elif args.task == "all":
         test.run_all_tests()
     else:

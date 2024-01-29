@@ -26,7 +26,7 @@ class Utility:
         try: return ast.literal_eval(x)
         except Exception: return x.strip()
 
-    def rnd(n, ndecs=None):
+    def rnd(self, n, ndecs=None):
         if not isinstance(n, (int, float)):
             return n
         if n == math.floor(n):
@@ -34,7 +34,27 @@ class Utility:
         mult = 10 ** (ndecs or 2)
         return math.floor(n * mult + 0.5) / mult
 
-    def shuffle(t):
+    def shuffle(self, t):
         u = t[:]
         random.shuffle(u)
+        return u
+
+    def slice(self, t, go=None, stop=None, inc=None):
+        if go is not None and go < 0:
+            go = len(t) + go
+        if stop is not None and stop < 0:
+            stop = len(t) + stop
+
+        u = []
+
+        if go is None:
+            go = 0
+        if stop is None:
+            stop = len(t)
+        if inc is None:
+            inc = 1
+
+        for j in range(go, stop, inc):
+            u.append(t[j])
+
         return u
