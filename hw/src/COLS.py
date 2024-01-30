@@ -29,6 +29,7 @@ class Cols:
         for columns in [self.x, self.y]:
             for col in columns:
                 col.add(row.cells[col.at])
+                    
 
     def __repr__(self):
         return f"Cols(names={self.names})"

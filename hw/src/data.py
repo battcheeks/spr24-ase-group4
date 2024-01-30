@@ -110,9 +110,12 @@ class DATA:
         return out, selected
     
     def bestRest(self, rows, want):
-        rows.sort(key=lambda a: a.d2h(self))
-        best = [self.cols['names']]
-        rest = [self.cols['names']]
+        rows.sort(key=lambda a: a.d2h(self) if a is not None else float('inf'))
+        #rows.sort(key=lambda a: a.d2h(self))
+        # best = [self.cols['names']]
+        # rest = [self.cols['names']]
+        best = [self.cols.names]
+        rest = [self.cols.names]
         for i, row in enumerate(rows):
             if i <= want:
                 best.append(row)
