@@ -191,13 +191,13 @@ class Tests():
 
             # Step 2
             top_count_n = 50
-            top6_row_y_data = []
+            top50_row_y_data = []
             for row_data in d.rows[:top_count_n]:
                 y_data = []
                 for y_field in d.cols.y:
                     y_data.append(row_data.cells[y_field.at])
-                top6_row_y_data.append(y_data)
-            output_message = "2. top50 {0}".format(top6_row_y_data)
+                top50_row_y_data.append(y_data)
+            output_message = "2. top50 {0}".format(top50_row_y_data)
             output_message_list[1].append(output_message)
 
 
