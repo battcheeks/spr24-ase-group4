@@ -12,16 +12,17 @@ class DATA:
         self.the = the
         self.util = Utility()
         self.adds(src, fun)
+        # print("Construting..")
 
     def adds(self, src, fun=None):
         if isinstance(src, str):
             # Here the _ is just because pairs returns two values.
             for x in self.util.l_csv(file=src):
+                # print(x)
                 self.add(x, fun)
         else:
             # for attr in dir(src):
             #     print("obj.%s = %r" % (attr, getattr(src, attr)))
-            # print(src.cells)
             ## also did some debugging here.
             for x in (src or []):
                 self.add(x, fun)
@@ -31,6 +32,8 @@ class DATA:
     def add(self, t, fun=None):
         # Made changes to the following block of code
         # print("Before", t)
+        # if t is None:
+        #     return 0
         if hasattr(t, 'cells'):
             row = t
         else:
@@ -38,10 +41,12 @@ class DATA:
         # print("After", row)
         # row = ROW(t) if type(t) is list else t.cells
         # row = t if t.cells else ROW(t)  Check line 182 might be different.
+        # print(self.cols)
         if self.cols:
             if fun:
                 fun(self, row)
             self.rows.append(self.cols.add(row))
+            # print(self.rows)
         else:
             self.cols = COLS(self.the, row)
 
@@ -70,8 +75,9 @@ class DATA:
         for col in columns_to_iterate:
             value = getattr(type(col), fun or "mid")(col)
             #print("Value = " , value)
-            #u[col.txt] = self.util.rnd(value, ndivs)
-            u[col.txt] = round(value,2)
+            u[col.txt] = self.util.rnd(value, ndivs)
+            # print(value)
+            # u[col.txt] = round(value,2)
         return u
     
     def clone(self, rows=None):
@@ -85,20 +91,22 @@ class DATA:
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
+        # print(self.rows)
         lite = rows[:budget0]
         dark = rows[budget0:]
-        for i in range(1, budget+1):
+        for i in range(budget):
             best, rest = self.bestRest(lite, len(lite)**some)
             todo, selected = self.split(best, rest, lite, dark)
-            stats[i] = selected.mid()
-            bests[i] = best.rows[0]
+            stats.append(selected.mid())
+            bests.append(best.rows[0])
             lite.append(dark.pop(todo))
         return stats, bests
     
     def split(self, best, rest, lite_rows, dark_rows):
-        selected = DATA(self.the, self.cols.names)
+        selected = DATA(self.the, [self.cols.names])
         max_val = 1E30
         out = 1
+        # print(dark_rows)
         for i, row in enumerate(dark_rows):
             b = row.like(best, len(lite_rows), 2)
             r = row.like(rest, len(lite_rows), 2)
@@ -110,7 +118,7 @@ class DATA:
         return out, selected
     
     def bestRest(self, rows, want):
-        rows.sort(key=lambda a: a.d2h(self) if a is not None else float('inf'))
+        rows.sort(key=lambda a: a.d2h(self))
         #rows.sort(key=lambda a: a.d2h(self))
         # best = [self.cols['names']]
         # rest = [self.cols['names']]

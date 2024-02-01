@@ -29,10 +29,10 @@ class Utility:
     def rnd(self, n, ndecs=None):
         if not isinstance(n, (int, float)):
             return n
-        if n == math.floor(n):
+        if n.is_integer():
             return n
         mult = 10 ** (ndecs or 2)
-        return math.floor(n * mult + 0.5) / mult
+        return round(n * mult) / mult
 
     def shuffle(self, t):
         u = t[:]

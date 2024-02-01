@@ -103,7 +103,7 @@ class Tests():
         budget = 10
         some = 0.5
 
-        d = DATA(self.the, self.the.file)
+        d = DATA(self.the, "../data/auto93.csv")
 
         def sayd(row, txt):
             distance_to_heaven = self.util.rnd(row.d2h(d))
@@ -112,13 +112,14 @@ class Tests():
         def say(row, txt):
             print("{0} {1}".format(str(row.cells), txt))
 
-        print("{0} {1} {2}".format(str(d.cols.names), "about", "d2h"))
+        print("{0} {1} {2}".format(str(d.cols.names.cells), "about", "d2h"))
         print("#overall")
         sayd(d.mid(), "mid")
         say(d.div(), "div")
         say(d.small(), "small=div*" + str(self.the.cohen))
 
         print("#generality")
+        # print(d.rows)
         stats, bests = d.gate(budget0, budget, some)
         for index, stat in enumerate(stats):
             sayd(stat, index + budget0)
@@ -133,9 +134,10 @@ class Tests():
 
         print("#random")
         random_rows = self.util.shuffle(d.rows)
-        random_rows = self.util.slice(random_rows, 1, math.log(0.05) / math.log(1 - self.the.cohen / 6))
+        print(len(random_rows), int(math.log(0.05) / math.log(1 - self.the.cohen / 6)))
+        random_rows = self.util.slice(random_rows, 1, int(math.log(0.05) / math.log(1 - self.the.cohen / 6)))
         random_rows.sort(key=lambda a: a.d2h(d))
-        sayd(random_rows[0])
+        sayd(random_rows[0], None)
 
 
     ## Running all the tests as per Class ##

@@ -27,8 +27,10 @@ class Cols:
 
     def add(self, row):
         for columns in [self.x, self.y]:
+            # print(columns)
             for col in columns:
                 col.add(row.cells[col.at])
+        return row
                     
 
     def __repr__(self):
