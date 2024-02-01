@@ -17,7 +17,7 @@ class Tests():
         self.sym = [self.test_sym_1, self.test_sym_2, self.test_sym_3]
         pass
 
-    def reset_seed(self):
+    def reset_to_default_seed(self):
         random.seed(self.the.seed)
     
     def test_sym_1(self):
@@ -98,7 +98,7 @@ class Tests():
                 print("%5.2f\t%s\t%s" % (wme['acc'] / wme['tries'], k, m))
         
     def test_gate(self):
-        self.reset_seed()
+        self.reset_to_default_seed()
         budget0 = 4
         budget = 10
         some = 0.5
@@ -138,6 +138,76 @@ class Tests():
         random_rows = self.util.slice(random_rows, 1, int(math.log(0.05) / math.log(1 - self.the.cohen / 6)))
         random_rows.sort(key=lambda a: a.d2h(d))
         sayd(random_rows[0], None)
+
+
+    """
+    function gate()
+      load data
+      shuffle order of rows
+      print("1. top6", y values of first 6 examples in ROWS)    #baseline1
+      print("2. top50", y values of first 50 examples in ROWS) #baseline2
+
+      sort ROWS on "distance to heaven" (see below)
+      print("3. most", y values of ROW[1])
+
+      ROWS = shuffle(ROWS)                   # again good experimental practice
+      LITE = grab the first BUDGET0 items    #  things we now "y" values
+      DARK = rows - LITE                     # things we don't know "y" values
+
+      for i = 1,BUDGET  do
+        sort LITE on "distance to heaven" (see below)
+        n=len(LITE)^SOME
+        BEST,REST = lite[:n], lite[n:]
+        TODO,SELECTED = split(BEST,REST,LITE,DARK)
+        print("4: rand", y values of centroid of (from DARK, select BUDGET0+i rows at random))
+        print("5: mid", y values of centroid of SELECTED)
+        print("6: top:, y values of first row in BEST)
+        move item TODO from DARK to LITE
+    """
+
+    def test_gate20(self):
+        budget0 = 4
+        budget = 10
+        some = 0.5
+        # A list that store the output of each steps
+        output_message_list = [[] for _ in range(6)]
+
+        test_case_n = 20
+        for _ in range(test_case_n):
+            random.seed()
+            d = DATA(self.the, "../data/auto93.csv")
+            d.rows = self.util.shuffle(d.rows)
+
+            # Step 1
+            top_count_n = 6
+            top6_row_y_data = []
+            for row_data in d.rows[:top_count_n]:
+                y_data = []
+                for y_field in d.cols.y:
+                    y_data.append(row_data.cells[y_field.at])
+                top6_row_y_data.append(y_data)
+            output_message = "1. top6 {0}".format(top6_row_y_data)
+            output_message_list[0].append(output_message)
+
+            # Step 2
+            top_count_n = 50
+            top6_row_y_data = []
+            for row_data in d.rows[:top_count_n]:
+                y_data = []
+                for y_field in d.cols.y:
+                    y_data.append(row_data.cells[y_field.at])
+                top6_row_y_data.append(y_data)
+            output_message = "2. top50 {0}".format(top6_row_y_data)
+            output_message_list[1].append(output_message)
+
+
+        debug_flag = False
+        if debug_flag:
+            # Print output for debuging
+            for step in range(6):
+                for line in output_message_list[step]:
+                    print("{0}".format(line))
+
 
 
     ## Running all the tests as per Class ##

@@ -65,6 +65,8 @@ def main():
         test.test_km()
     elif args.task == "gate":
         test.test_gate()
+    elif args.task == "gate20":
+        test.test_gate20()
     elif args.task == "all":
         test.run_all_tests()
     else:
