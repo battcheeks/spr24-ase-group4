@@ -138,6 +138,30 @@ class Tests():
         random_rows = self.util.slice(random_rows, 1, int(math.log(0.05) / math.log(1 - self.the.cohen / 6)))
         random_rows.sort(key=lambda a: a.d2h(d))
         sayd(random_rows[0], None)
+        
+    def test_gate20(self):
+        print("#average, #optimistic, #random")
+        ss, bs, rs = NUM(), NUM(), NUM()
+        util = Utility()
+        
+        for i in range(20):
+            print(i, end=" ")
+            d = DATA(self.the.file)
+            d.rows = self.util.shuffle(d.rows)
+            stats, bests = d.gate(4, 16, 0.5)
+            
+            ss.add(stats[-1].d2h(d))
+            bs.add(bests[-1].d2h(d))
+            stat,best = stats[-1].d2h(d), bests[-1].d2h(d)
+            
+            rows = self.util.shuffle(d.rows)
+            rows = self.util.slice(rows, 1, int(math.log(0.05) / math.log(1 - self.the.cohen / 6)))
+            rows.sort(key=lambda a: a.d2h(d))
+            rs.add(rows[0].d2h(d))
+        
+            print("")
+            print(self.util.rnd(ss.mid(), 2), self.util.rnd(bs.mid(), 2), self.util.rnd(rs.mid(), 2))
+            print(self.util.rnd(2 * ss.div(), 2), self.util.rnd(2 * bs.div(), 2), self.util.rnd(2 * rs.div(), 2))
 
 
     ## Running all the tests as per Class ##
