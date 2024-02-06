@@ -208,8 +208,19 @@ class Tests():
                 for line in output_message_list[step]:
                     print("{0}".format(line))
 
+    def test_dist():
+        d = DATA.new("../data/auto93.csv")
+        r1 = d.rows[0]  # In Python, indices start from 0
+        rows = r1.neighbors(d)
+        for i, row in enumerate(rows):
+            if i % 30 == 0:
+                print(str(row.cells), round(row.dist(r1, d), 2))
 
-
+    def test_far():
+        d = DATA.new("../data/auto93.csv")
+        a, b, C, _ = d.farapart(d.rows)
+        print(str(a.cells), str(b.cells), round(C, 2))
+    
     ## Running all the tests as per Class ##
     
     def run_num_tests(self):
