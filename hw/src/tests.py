@@ -139,33 +139,9 @@ class Tests():
         random_rows.sort(key=lambda a: a.d2h(d))
         sayd(random_rows[0], None)
 
-
-    """
-    function gate()
-      load data
-      shuffle order of rows
-      print("1. top6", y values of first 6 examples in ROWS)    #baseline1
-      print("2. top50", y values of first 50 examples in ROWS) #baseline2
-
-      sort ROWS on "distance to heaven" (see below)
-      print("3. most", y values of ROW[1])
-
-      ROWS = shuffle(ROWS)                   # again good experimental practice
-      LITE = grab the first BUDGET0 items    #  things we now "y" values
-      DARK = rows - LITE                     # things we don't know "y" values
-
-      for i = 1,BUDGET  do
-        sort LITE on "distance to heaven" (see below)
-        n=len(LITE)^SOME
-        BEST,REST = lite[:n], lite[n:]
-        TODO,SELECTED = split(BEST,REST,LITE,DARK)
-        print("4: rand", y values of centroid of (from DARK, select BUDGET0+i rows at random))
-        print("5: mid", y values of centroid of SELECTED)
-        print("6: top:, y values of first row in BEST)
-        move item TODO from DARK to LITE
-    """
-
     def test_gate20(self):
+        debug = False
+
         budget0 = 4
         budget = 10
         some = 0.5
@@ -174,11 +150,16 @@ class Tests():
 
         test_case_n = 20
         for _ in range(test_case_n):
-            random.seed()
+            seed_value = random.randint(0, 100000)
+            random.seed(seed_value)
+
+            if debug:
+                print("seed = {0}".format(seed_value))
+
             d = DATA(self.the, "../data/auto93.csv")
             d.rows = self.util.shuffle(d.rows)
 
-            # Step 1
+            # Step 1: Top 6
             top_count_n = 6
             top6_row_y_data = []
             for row_data in d.rows[:top_count_n]:
@@ -189,7 +170,7 @@ class Tests():
             output_message = "1. top6 {0}".format(top6_row_y_data)
             output_message_list[0].append(output_message)
 
-            # Step 2
+            # Step 2: Top 50
             top_count_n = 50
             top50_row_y_data = []
             for row_data in d.rows[:top_count_n]:
@@ -200,13 +181,61 @@ class Tests():
             output_message = "2. top50 {0}".format(top50_row_y_data)
             output_message_list[1].append(output_message)
 
-        print(output_message_list[0])
-        debug_flag = False
-        if debug_flag:
-            # Print output for debuging
-            for step in range(6):
-                for line in output_message_list[step]:
-                    print("{0}".format(line))
+
+            # Step 3: Most
+            d.rows.sort(key=lambda a: a.d2h(d))
+            most_result = []
+            for y_field in d.cols.y:
+                most_result.append(d.rows[0].cells[y_field.at])
+            output_message_list[2].append("3. most: {0}".format(most_result))
+
+            d.rows = self.util.shuffle(d.rows)
+            lite = self.util.slice(d.rows, 0, budget0)
+            dark = self.util.slice(d.rows, budget0 + 1)
+
+            stats = []
+            bests = []
+            for i in range(budget):
+                best, rest = d.bestRest(lite, len(lite)**some)
+                todo, selected = d.split(best, rest, lite, dark)
+                stats.append(selected.mid())
+                bests.append(best.rows[0])
+
+                random_d = DATA(self.the, [d.cols.names])
+                for row in random.sample(dark, budget0 + 1):
+                    random_d.add(row)
+
+                # Step 4
+                random_result = []
+                for y_field in d.cols.y:
+                    rounded_number = round(random_d.mid().cells[y_field.at], 2)
+                    random_result.append(rounded_number)
+                output_message_list[3].append("4. rand: {0}".format(random_result))
+
+
+                # Step 5
+                mid_result = []
+                for y_field in d.cols.y:
+                    rounded_number = round(selected.mid().cells[y_field.at], 2)
+                    mid_result.append(rounded_number)
+                output_message_list[4].append("5. mid: {0}".format(mid_result))
+
+
+                # Step 6
+                top_result = []
+                for y_field in d.cols.y:
+                    rounded_number = round(best.rows[0].cells[y_field.at], 2)
+                    top_result.append(rounded_number)
+                output_message_list[5].append("6. top: {0}".format(top_result))
+
+                lite.append(dark.pop(todo))
+
+        # Sort output message
+        for step in range(6):
+            output_message_list[step].sort()
+            for line in output_message_list[step]:
+                print("{0}".format(line))
+            print("")
 
     def test_dist():
         d = DATA.new("../data/auto93.csv")
