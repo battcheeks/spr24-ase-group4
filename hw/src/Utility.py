@@ -4,10 +4,24 @@ import ast
 import re, fileinput
 import math, random
 
+#for mylo.py
+DEFAULT_bins_VALUE= 16
+DEFAULT_Beam_VALUE = 10
+DEFAULT_CUT_VALUE = 0.1
+DEFAULT_d_VALUE = 32
+DEFAULT_D_VALUE = 4
+DEFAULT_F_VALUE = 0.95
+DEFAULT_Half_VALUE = 256
+DEFAULT_p_VALUE = 2
+DEFAULT_S_VALUE = 2
+
+
+#for gate.py
 DEFAULT_COHEN_VALUE = 0.35  # small effect size
 DEFAULT_K_VALUE = 1  # low class frequency kludge
 DEFAULT_M_VALUE = 2  # low attribute frequency kludge
 DEFAULT_RANDOM_SEED = 31210  # random number seed
+
 
 class Utility:
     def __init__(self) -> None:

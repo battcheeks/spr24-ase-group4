@@ -132,15 +132,13 @@ class DATA:
                 rest.append(row)
         return DATA(self.the, best), DATA(self.the, rest)
     
-    def farapart(self, the, rows, sortp, a=None, b=None):
-        far = int(len(rows) * the.Far)
+    def farapart(self,rows, sortp=None, a=None, b=None):
+        far = int(len(rows) * self.the.Far)
         evals = 1 if a else 2
         a = a or random.choice(rows).neighbors(self, rows)[far]
         b = a.neighbors(self, rows)[far]
-
         if sortp and b.d2h(self) < a.d2h(self):
             a, b = b, a
-
         return a, b, a.dist(b, self), evals
 #data = DATA(src='../data/auto93.csv')
 

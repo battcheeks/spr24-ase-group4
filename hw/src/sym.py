@@ -45,14 +45,14 @@ class SYM:
             return ((self.has.get(x, 0) or 0) + self.the.m * prior) / (self.n + self.the.m)
         
 #distance
-def dist(self, x, y):
+    def dist(self, x, y):
         if x == "?" and y == "?" :
             return 1 
         if x == y: 
             return 0
         else:
             return 1
-        
+
 #discritization
 def bin(self,x):
     return x

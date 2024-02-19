@@ -51,9 +51,11 @@ class ROW:
         return (d ** 0.5) / (n ** 0.5)
     
     #dist
-    def dist(self, other, data, the):
-        d, n, p = 0, 0, the.p
+    def dist(self, other, data):
+        d, n, p = 0, 0, self.the.p
         for col in data.cols.x:
+            # print(d, col.dist(self.cells[col.at], other.cells[col.at]) ** p )
+            # print(col, self.cells[col.at], other.cells[col.at] )
             n += 1
             d += col.dist(self.cells[col.at], other.cells[col.at]) ** p
         return (d / n) ** (1 / p)
