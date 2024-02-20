@@ -140,6 +140,23 @@ class DATA:
         if sortp and b.d2h(self) < a.d2h(self):
             a, b = b, a
         return a, b, a.dist(b, self), evals
+    
+    def half(self, sortp, before, evals):
+        some = self.many(min(self.the.Half, len(self.rows)))
+        a, b, C, evals = self.farapart(some, sortp, before)
+        def dist(row1, row2):
+            return row1.dist(self,row2)
+        def project(r):
+            return (dist(r, a)**2 + C**2 - dist(r, b)**2) / (2 * C)
+
+        as_, bs = [], []
+        for n, row in enumerate(self.keysort(self.rows, project)):
+            if n <= (len(self.rows) // 2):
+                as_.append(row)
+            else:
+                bs.append(row)
+
+        return as_, bs, a, b, C, dist(a, bs[0]), evals
 #data = DATA(src='../data/auto93.csv')
 
 #print(data.stats())

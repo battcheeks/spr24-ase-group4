@@ -72,3 +72,13 @@ class Utility:
             u.append(t[j])
 
         return u
+    
+    def many(t, n):
+        n = n or len(t)
+        return [random.choice(t) for _ in range(n)]
+
+    def keysort(t, fun):
+        u = [{'x': x, 'y': fun(x)} for x in t]
+        u.sort(key=lambda a: a['y'])
+        v = [xy['x'] for xy in u]
+        return v

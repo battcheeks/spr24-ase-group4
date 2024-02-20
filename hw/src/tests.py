@@ -243,7 +243,7 @@ class Tests():
         rows = r1.neighbors(d)
         for i, row in enumerate(rows):
             if i % 30 == 0:
-                print(str(row.cells), round(row.dist(r1, d), 2))
+                print(i+1,"     ",str(row.cells), "     ",round(row.dist(r1, d), 2))
 
     def test_far(self):
         d = DATA(self.the, "../data/auto93.csv")
