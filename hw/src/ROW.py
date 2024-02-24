@@ -53,9 +53,12 @@ class ROW:
     #dist
     def dist(self, other, data):
         d, n, p = 0, 0, self.the.p
+        # try:
+        #     print("Normal data...", data)
+        #     data.cols.x
+        # except:
+        #     print("Error from here...", data)
         for col in data.cols.x:
-            # print(d, col.dist(self.cells[col.at], other.cells[col.at]) ** p )
-            # print(col, self.cells[col.at], other.cells[col.at] )
             n += 1
             d += col.dist(self.cells[col.at], other.cells[col.at]) ** p
         return (d / n) ** (1 / p)

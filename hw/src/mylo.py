@@ -79,6 +79,8 @@ def main():
         test.test_dist()
     elif args.task == "far":
         test.test_far()
+    elif args.task == "tree":
+        test.test_tree()
     elif args.task == "all":
         test.run_all_tests()
     else:

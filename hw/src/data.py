@@ -1,6 +1,7 @@
 from Utility import Utility
 from ROW import ROW
 from COLS import Cols as COLS
+from node import NODE
 import random
 
 # ----------------------------------------------------------------------------
@@ -132,31 +133,69 @@ class DATA:
                 rest.append(row)
         return DATA(self.the, best), DATA(self.the, rest)
     
-    def farapart(self,rows, sortp=None, a=None, b=None):
+    def farapart(self, rows, sortp=None, a=None, b=None):
         far = int(len(rows) * self.the.Far)
         evals = 1 if a else 2
+        # print("before a", a)
         a = a or random.choice(rows).neighbors(self, rows)[far]
+        # print("After a", a)
         b = a.neighbors(self, rows)[far]
         if sortp and b.d2h(self) < a.d2h(self):
             a, b = b, a
         return a, b, a.dist(b, self), evals
     
-    def half(self, sortp, before, evals):
-        some = self.many(min(self.the.Half, len(self.rows)))
+    def half(self, rows, sortp, before, evals=None):
+        some = self.util.many(rows, min(self.the.H, len(self.rows)))
+        # print("sortp: ", sortp, "before: ", before, "evals: ", evals)
         a, b, C, evals = self.farapart(some, sortp, before)
-        def dist(row1, row2):
+        def d(row1, row2):
+            # print("Row1's", row1.cells)
             return row1.dist(self,row2)
         def project(r):
-            return (dist(r, a)**2 + C**2 - dist(r, b)**2) / (2 * C)
+            return (d(r, a)**2 + C**2 - d(r, b)**2) / (2 * C)
 
         as_, bs = [], []
-        for n, row in enumerate(self.keysort(self.rows, project)):
+        for n, row in enumerate(self.util.keysort(rows, project)):
             if n <= (len(self.rows) // 2):
                 as_.append(row)
             else:
                 bs.append(row)
 
-        return as_, bs, a, b, C, dist(a, bs[0]), evals
+        return as_, bs, a, b, C, d(a, bs[0]), evals
+    
+    # Recursive random projects.  `Half` then data, then recurse on each half.
+    def tree(self, sortp, _tree=None):
+        evals = 0
+
+        def _tree(data, above=None):
+            node = NODE(data)
+            # print("above is this: ", above)
+            if len(data.rows) > 2 * (len(self.rows) ** 0.5):
+                lefts, rights, node.left, node.right, node.C, node.cut, evals1 = self.half(data.rows, sortp, above)
+                evals += evals1
+                node.lefts = _tree(self.clone(lefts), node.left)
+                node.rights = _tree(self.clone(rights), node.right)
+            return node
+
+        return _tree(self), evals
+    
+#   Optimization via tecursive random projects. 
+#   `Half` then data, then recurse on the best half.
+    def branch(self, stop=None, rest=None, _branch=None, evals=1):
+        rest = []
+        stop = stop or (2 * (len(self.rows) ** 0.5))
+
+        def _branch(data, above=None, left=None, lefts=None, rights=None):
+            nonlocal evals
+            if len(data.rows) > stop:
+                lefts, rights, left = self.half(data.rows, True, above)
+                evals += 1
+                rest.extend(rights)
+                return _branch(data.clone(lefts), left)
+            else:
+                return self.clone(data.rows), self.clone(rest), evals
+
+        return _branch(self)
 #data = DATA(src='../data/auto93.csv')
 
 #print(data.stats())
