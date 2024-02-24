@@ -73,11 +73,11 @@ class Utility:
 
         return u
     
-    def many(t, n):
+    def many(self, t, n):
         n = n or len(t)
         return [random.choice(t) for _ in range(n)]
 
-    def keysort(t, fun):
+    def keysort(self, t, fun):
         u = [{'x': x, 'y': fun(x)} for x in t]
         u.sort(key=lambda a: a['y'])
         v = [xy['x'] for xy in u]

@@ -252,6 +252,13 @@ class Tests():
         print("far1: ",str(a.cells))
         print("far2: ",str(b.cells))
         print("distance = ",C)
+        
+    # eg.tree() lua equivalent
+    def test_tree(self):
+        data = DATA(self.the, "../data/auto93.csv")
+        t, evals = data.tree(True)
+        t.show()
+        print(evals)
     
     ## Running all the tests as per Class ##
     
