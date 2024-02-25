@@ -136,7 +136,7 @@ class DATA:
         return DATA(self.the, best), DATA(self.the, rest)
     
     def farapart(self, rows, sortp=None, a=None, b=None):
-        far = int(len(rows) * self.the.Far)
+        far = int(len(rows) * self.the.Far) // 1
         evals = 1 if a else 2
         a = a or random.choice(rows).neighbors(self, rows)[far]
         b = a.neighbors(self, rows)[far]
