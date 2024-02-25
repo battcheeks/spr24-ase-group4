@@ -83,7 +83,7 @@ class DATA:
         return u
     
     def clone(self, rows=None):
-        new = DATA(self.the)
+        new = DATA(self.the, [self.cols.names])
         new.cols.names = self.cols.names
         for row in rows or []:
             new.add(row)
@@ -150,17 +150,24 @@ class DATA:
         a, b, C, evals = self.farapart(some, sortp, before)
         def d(row1, row2):
             # print("Row1's", row1.cells)
-            return row1.dist(self,row2)
+            return row1.dist(row2, self)
         def project(r):
             return (d(r, a)**2 + C**2 - d(r, b)**2) / (2 * C)
 
         as_, bs = [], []
         for n, row in enumerate(self.util.keysort(rows, project)):
-            if n <= (len(self.rows) // 2):
+            print(len)
+            if n <= (len(self.rows) // 2 - 1):
                 as_.append(row)
             else:
                 bs.append(row)
-
+        try:
+            print("as array", as_)
+            print("bs array", bs)
+            bs[0]
+        except:
+            print("Except a array", as_)
+            print("Except bs array", bs)
         return as_, bs, a, b, C, d(a, bs[0]), evals
     
     # Recursive random projects.  `Half` then data, then recurse on each half.
@@ -168,6 +175,7 @@ class DATA:
         evals = 0
 
         def _tree(data, above=None):
+            nonlocal evals
             node = NODE(data)
             # print("above is this: ", above)
             if len(data.rows) > 2 * (len(self.rows) ** 0.5):
