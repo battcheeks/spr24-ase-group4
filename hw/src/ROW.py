@@ -50,7 +50,7 @@ class ROW:
             d += abs(col.heaven - col.norm(self.cells[col.at])) ** 2
         return (d ** 0.5) / (n ** 0.5)
     
-    #dist
+    # dist
     def dist(self, other, data):
         d, n, p = 0, 0, self.the.p
         for col in data.cols.x:
@@ -60,6 +60,6 @@ class ROW:
             d += col.dist(self.cells[col.at], other.cells[col.at]) ** p
         return (d / n) ** (1 / p)
 
-    #neighbors
+    # neighbors
     def neighbors(self, data, rows=None):
         return sorted(rows or data.rows, key=lambda row: self.dist(row, data))

@@ -1,10 +1,13 @@
 from Utility import Utility
 from ROW import ROW
 from COLS import Cols as COLS
+from node import NODE
 import random
 
 # ----------------------------------------------------------------------------
 # Data Class
+
+is_debug = False
 
 class DATA:
     def __init__(self, the, src, fun=None):
@@ -82,7 +85,7 @@ class DATA:
         return u
     
     def clone(self, rows=None):
-        new = DATA(self.the)
+        new = DATA(self.the, [self.cols.names])
         new.cols.names = self.cols.names
         for row in rows or []:
             new.add(row)
@@ -120,7 +123,7 @@ class DATA:
     
     def bestRest(self, rows, want):
         rows.sort(key=lambda a: a.d2h(self))
-        #rows.sort(key=lambda a: a.d2h(self))
+        # rows.sort(key=lambda a: a.d2h(self))
         # best = [self.cols['names']]
         # rest = [self.cols['names']]
         best = [self.cols.names]
@@ -132,7 +135,7 @@ class DATA:
                 rest.append(row)
         return DATA(self.the, best), DATA(self.the, rest)
     
-    def farapart(self,rows, sortp=None, a=None, b=None):
+    def farapart(self, rows, sortp=None, a=None, b=None):
         far = int(len(rows) * self.the.Far)
         evals = 1 if a else 2
         a = a or random.choice(rows).neighbors(self, rows)[far]
@@ -140,23 +143,44 @@ class DATA:
         if sortp and b.d2h(self) < a.d2h(self):
             a, b = b, a
         return a, b, a.dist(b, self), evals
-    
-    def half(self, sortp, before, evals):
-        some = self.many(min(self.the.Half, len(self.rows)))
+
+    def half(self, rows, sortp, before):
+        """
+        as_ = The better side, bs  = The worse side
+        a   = , b   = 
+        C   = distance from a to b
+        """
+        some = self.util.many(rows, min(self.the.Half, len(rows)))
         a, b, C, evals = self.farapart(some, sortp, before)
         def dist(row1, row2):
-            return row1.dist(self,row2)
+            return row1.dist(row2, self)
         def project(r):
             return (dist(r, a)**2 + C**2 - dist(r, b)**2) / (2 * C)
 
         as_, bs = [], []
-        for n, row in enumerate(self.keysort(self.rows, project)):
-            if n <= (len(self.rows) // 2):
+        for n, row in enumerate(self.util.keysort(rows, project)):
+            if n <= (len(rows) // 2 - 1):
                 as_.append(row)
             else:
                 bs.append(row)
 
         return as_, bs, a, b, C, dist(a, bs[0]), evals
+
+    def tree(self, sortp):
+        evals = 0
+
+        def _tree(data, above=None):
+            nonlocal evals
+            node = NODE(data)
+            if len(data.rows) > 2 * len(self.rows) ** 0.5:
+                lefts, rights, node.left, node.right, node.C, node.cut, evals1 = self.half(data.rows, sortp, above)
+                evals = evals + evals1
+                node.lefts = _tree(self.clone(lefts), node.left)
+                node.rights = _tree(self.clone(rights), node.right)
+            return node
+
+        return _tree(self), evals
+
 #data = DATA(src='../data/auto93.csv')
 
 #print(data.stats())

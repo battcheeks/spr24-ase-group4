@@ -243,17 +243,38 @@ class Tests():
         rows = r1.neighbors(d)
         for i, row in enumerate(rows):
             if i % 30 == 0:
-                print(i+1,"     ",str(row.cells), "     ",round(row.dist(r1, d), 2))
+                print(i + 1, "     ", str(row.cells), "     ", round(row.dist(r1, d), 2))
 
     def test_far(self):
         d = DATA(self.the, "../data/auto93.csv")
         a, b, C, _ = d.farapart(d.rows)
         print(str(a.cells), str(b.cells), round(C, 2))
-        print("far1: ",str(a.cells))
-        print("far2: ",str(b.cells))
-        print("distance = ",C)
+        print("far1: ", str(a.cells))
+        print("far2: ", str(b.cells))
+        print("distance = ", C)
+
+    def test_half(self):
+        self.reset_to_default_seed()
+        print("seed = {0}".format(self.the.seed))
+
+        d = DATA(self.the, "../data/auto93.csv")
+        sortp, above = None, None
+        lefts, rights, left, right, C, cut, evals = d.half(d.rows, sortp, above)
+        print("|lefts| = {0}".format(len(lefts)))
+        print("|rights| = {0}".format(len(rights)))
+        print("lefts: {0}".format(str(left.cells)))
+        print("rights: {0}".format(str(right.cells)))
+        print("C = {0}".format(C))
+        print("cut = {0}".format(cut))
+
+    def test_tree(self):
+        self.reset_to_default_seed()
+        d = DATA(self.the, "../data/auto93.csv")
+        tree, evals = d.tree(True)
+        tree.show()
+        print("evals: {0}".format(evals))
     
-    ## Running all the tests as per Class ##
+    # Running all the tests as per Class ##
     
     def run_num_tests(self):
         for i in self.num:
