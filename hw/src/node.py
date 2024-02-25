@@ -11,19 +11,21 @@ class NODE:
         if self.rights:
             self.rights.walk(fun, depth + 1)
 
-    def show(self, _show, max_depth):
+    def show(self):
         def d2h(data):
-            return round(data.mid().d2h(self.here), ndigits=6)
+            return round(data.mid().d2h(self.here), ndigits=2)
 
         max_depth = 0
 
-        def _show(node, depth, leafp, post):
+        def _show(node, depth, leafp):
             nonlocal max_depth
-            post = post if leafp else f"{d2h(node.here)}\t{node.here.mid().cells}"
+            cells_list = [round(cell, 2) for cell in node.here.mid().cells]
+            post = (str(round(d2h(node.here), 2)) + "\t" + str(cells_list)) if leafp else ""
             max_depth = max(max_depth, depth)
             print(('|.. ' * depth) + post)
 
         self.walk(_show)
         print("")
-        print(("    " * max_depth) + f"{d2h(self.here)}\t{self.here.mid().cells}")
-        print(("    " * max_depth) + "_\t" + str(self.here.cols.names))
+        cells_list = [round(cell, 2) for cell in self.here.mid().cells]
+        print(("    " * max_depth) + f"{d2h(self.here)}\t{cells_list}")
+        print(("    " * max_depth) + "_\t" + str(self.here.cols.names.cells))
