@@ -147,7 +147,7 @@ class DATA:
     def half(self, rows, sortp, before):
         """
         as_ = The better side, bs  = The worse side
-        a   = , b   = 
+        a   = the better point, b  = The worse point
         C   = distance from a to b
         """
         some = self.util.many(rows, min(self.the.Half, len(rows)))
@@ -180,6 +180,24 @@ class DATA:
             return node
 
         return _tree(self), evals
+
+    def branch(self, stop=None):
+        evals = 1
+        rest = []
+        if not stop:
+            stop = (2 * (len(self.rows)) ** 0.5)
+
+        def _branch(data, above=None, left=None, lefts=None, rights=None):
+            nonlocal evals
+            if len(data.rows) > stop:
+                # as_, bs, a, b, C, dist(a, bs[0]), evals
+                lefts, rights, left, _, _, _, _ = self.half(data.rows, True, above)
+                evals += 1
+                rest.extend(rights)
+                return _branch(data.clone(lefts), left)
+            else:
+                return self.clone(data.rows), self.clone(rest), evals
+        return _branch(self)
 
 #data = DATA(src='../data/auto93.csv')
 

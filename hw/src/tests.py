@@ -273,7 +273,28 @@ class Tests():
         tree, evals = d.tree(True)
         tree.show()
         print("evals: {0}".format(evals))
-    
+
+    def test_branch(self):
+        self.reset_to_default_seed()
+        d = DATA(self.the, "../data/auto93.csv")
+        best, rest, evals = d.branch()
+        best_data = [round(cell, 2) for cell in best.mid().cells]
+        print("Best: {0}".format(best_data))
+        rest_data = [round(cell, 2) for cell in rest.mid().cells]
+        print("Rest: {0}".format(rest_data))
+        print("evals: {0}".format(evals))
+
+    def test_doubletap(self):
+        self.reset_to_default_seed()
+        d = DATA(self.the, "../data/auto93.csv")
+        best1, rest, evals1 = d.branch(32)
+        best2, _, evals2 = best1.branch(4)
+
+        best_data = [round(cell, 2) for cell in best2.mid().cells]
+        mid_data = [round(cell, 2) for cell in rest.mid().cells]
+        print("{0}\t\t{1}".format(best_data, mid_data))
+        print(evals1 + evals2)
+
     # Running all the tests as per Class ##
     
     def run_num_tests(self):

@@ -83,6 +83,10 @@ def main():
         test.test_half()
     elif args.task == "tree":
         test.test_tree()
+    elif args.task == "branch":
+        test.test_branch()
+    elif args.task == "doubletap":
+        test.test_doubletap()
     elif args.task == "all":
         test.run_all_tests()
     else:
