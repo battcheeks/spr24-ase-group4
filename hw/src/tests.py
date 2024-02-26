@@ -320,26 +320,32 @@ class Tests():
 
         titles = [str(cell) for cell in d.cols.names.cells]
 
-        # mid
-        mid_values = [round(cell, 2) for cell in d.mid().cells]
-        mid_values.append(d.mid().d2h(d))
-
-        # div
-        div_values = [round(cell, 2) for cell in d.div().cells]
-        div_values.append(d.div().d2h(d))
-
         separator = '   '
         title_str = separator.join(f'{title:<10}' for title in titles)
         print(f"names                      \t{title_str}\tD2h-")
 
+        # mid
+        mid_values = [round(cell, 2) for cell in d.mid().cells]
+        mid_values.append(d.mid().d2h(d))
         value_str = separator.join(f'{format_value(value):<10}' for value in mid_values)
         print(f"mid                        \t{value_str}")
 
+        # div
+        # Calculate the standard deviation of all d2h
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+
+        div_values = [round(cell, 2) for cell in d.div().cells]
+        div_values.append(round(standard_deviation, 2))
         value_str = separator.join(f'{format_value(value):<10}' for value in div_values)
         print(f"div                        \t{value_str}")
 
         # smo with budget 9
         print("#")
+
         smo9_top_result = []
 
         budget0 = 4
@@ -406,6 +412,40 @@ class Tests():
 
         # TODO
 
+    def test_stats(self):
+
+        def format_value(value):
+            if value == int(value):
+                return f'{int(value)}'
+            else:
+                return f'{value:.2f}'.rstrip('0').rstrip('.')
+
+        self.reset_to_default_seed()
+        smo_repeat_time = 20
+        self.the.file = "../data/auto93.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        self.reset_to_default_seed()
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(smo_repeat_time))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        # Best
+        sorted_d = sorted(d.rows, key=lambda a: a.d2h(d))
+        print("best : {0}".format(round(sorted_d[0].d2h(d), 2)))
+
+        # Tiny
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+        tiny_value = 0.35 * standard_deviation
+        print("tiny : {0}".format(round(tiny_value, 2)))
 
     # Running all the tests as per Class ##
     
