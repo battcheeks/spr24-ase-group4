@@ -5,6 +5,7 @@ from learn import learn
 import random
 import math
 from Utility import Utility
+from datetime import datetime
 
 class Tests():
     def __init__(self, the) -> None:
@@ -294,6 +295,86 @@ class Tests():
         mid_data = [round(cell, 2) for cell in rest.mid().cells]
         print("{0}\t\t{1}".format(best_data, mid_data))
         print(evals1 + evals2)
+
+    def test_detail(self):
+        self.reset_to_default_seed()
+        smo_repeat_time = 20
+        self.the.file = "../data/auto93.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        self.reset_to_default_seed()
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(smo_repeat_time))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        titles = [str(cell) for cell in d.cols.names.cells]
+
+        # mid
+        mid_values = [round(cell, 2) for cell in d.mid().cells]
+        mid_values.append(d.mid().d2h(d))
+
+        # div
+        div_values = [round(cell, 2) for cell in d.div().cells]
+        div_values.append(d.div().d2h(d))
+
+        separator = '   '
+        title_str = separator.join(f'{title:<10}' for title in titles)
+        print(f"names                      \t{title_str}\tD2h-")
+
+        value_str = separator.join(f'{value:<10.2f}' for value in mid_values)
+        print(f"mid                        \t{value_str}")
+
+        value_str = separator.join(f'{value:<10.2f}' for value in div_values)
+        print(f"div                        \t{value_str}")
+
+        print("#")
+
+        smo9_top_result = []
+
+        budget0 = 4
+        budget = 9
+        some = 0.5
+        for _ in range(smo_repeat_time):
+            d.rows = self.util.shuffle(d.rows)
+
+            lite = self.util.slice(d.rows, 0, budget0)
+            dark = self.util.slice(d.rows, budget0 + 1)
+
+            stats = []
+            bests = []
+            for i in range(budget):
+                best, rest = d.bestRest(lite, len(lite)**some)
+                todo, selected = d.split(best, rest, lite, dark)
+                stats.append(selected.mid())
+                bests.append(best.rows[0])
+
+                lite.append(dark.pop(todo))
+
+            top_result = [round(cell, 2) for cell in best.rows[0].cells]
+            top_result.append(best.rows[0].d2h(d))
+
+
+            mid_result = [round(cell, 2) for cell in selected.mid().cells]
+            mid_result.append(selected.mid().d2h(d))
+
+
+            smo9_top_result.append(top_result)
+
+
+        smo9_top_result = sorted(smo9_top_result, key=lambda x: x[-1])
+
+        for i in range(smo_repeat_time):
+            value_str = separator.join(f'{value:<10.2f}' for value in smo9_top_result[i])
+            print(f"smo9                        \t{value_str}")
+
+        print("#")
+
+        # TODO
+
 
     # Running all the tests as per Class ##
     

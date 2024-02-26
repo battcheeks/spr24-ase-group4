@@ -39,10 +39,12 @@ def main():
     parser.add_argument('-s', '--seed', help="random number seed              = 31210")
     parser.add_argument("-t", "--task", help="start up action                 = 'help' ")
     parser.add_argument("-C", "--Cut", help="ignore ranges less than C*max   = .1")
-    parser.add_argument("-d", "--d",type=int, help="frist cut                       = 32")
-    parser.add_argument("-D", "--D",type=int, help="second cut                       = 4")
+    parser.add_argument("-d", "--d", type=int, help="frist cut                       = 32")
+    parser.add_argument("-D", "--D", type=int, help="second cut                       = 4")
     parser.add_argument("-F", "--Far", help="how far to search for faraway?  = .95")
-    parser.add_argument("-H", "--Half",type=int, help="#items to use in clustering     = 256")
+    parser.add_argument("-H", "--Half", type=int, help="#items to use in clustering     = 256")
+    parser.add_argument("-k", "--k", type=int, help="low class frequency kludge      = 1")
+    parser.add_argument('-m', '--m', type=int, help="low attribute frequency kludge  = 2")
     parser.add_argument("-p", "--p", help="weights for distance            = 2")
     parser.add_argument("-S", "--Support", help="coeffecient on best            = 2")
     
@@ -64,6 +66,8 @@ def main():
     if (not args.Half): args.Half = Utility.DEFAULT_Half_VALUE    #H=256
     if (not args.p): args.p = Utility.DEFAULT_p_VALUE       #p =2
     if (not args.Support): args.Support = Utility.DEFAULT_S_VALUE      #S= 2
+    if (not args.k): args.k = Utility.DEFAULT_K_VALUE  # default k = 1
+    if (not args.m): args.m = Utility.DEFAULT_M_VALUE  # default m = 1
 
     
     # Load data from CSV file
@@ -87,6 +91,8 @@ def main():
         test.test_branch()
     elif args.task == "doubletap":
         test.test_doubletap()
+    elif args.task == "detail":
+        test.test_detail()
     elif args.task == "all":
         test.run_all_tests()
     else:
