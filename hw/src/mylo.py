@@ -61,7 +61,7 @@ def main():
     if (not args.d): args.d = Utility.DEFAULT_d_VALUE       #d=32
     if (not args.D): args.D = Utility.DEFAULT_D_VALUE       #D=4
     if (not args.Far): args.Far = Utility.DEFAULT_F_VALUE       #F =.95
-    if (not args.Half): args.H = Utility.DEFAULT_Half_VALUE    #H=256
+    if (not args.Half): args.Half = Utility.DEFAULT_Half_VALUE    #H=256
     if (not args.p): args.p = Utility.DEFAULT_p_VALUE       #p =2
     if (not args.Support): args.Support = Utility.DEFAULT_S_VALUE      #S= 2
 
@@ -79,8 +79,14 @@ def main():
         test.test_dist()
     elif args.task == "far":
         test.test_far()
+    elif args.task == "half":
+        test.test_half()
     elif args.task == "tree":
         test.test_tree()
+    elif args.task == "branch":
+        test.test_branch()
+    elif args.task == "doubletap":
+        test.test_doubletap()
     elif args.task == "all":
         test.run_all_tests()
     else:

@@ -7,6 +7,8 @@ import random
 # ----------------------------------------------------------------------------
 # Data Class
 
+is_debug = False
+
 class DATA:
     def __init__(self, the, src, fun=None):
         self.rows = []
@@ -121,7 +123,7 @@ class DATA:
     
     def bestRest(self, rows, want):
         rows.sort(key=lambda a: a.d2h(self))
-        #rows.sort(key=lambda a: a.d2h(self))
+        # rows.sort(key=lambda a: a.d2h(self))
         # best = [self.cols['names']]
         # rest = [self.cols['names']]
         best = [self.cols.names]
@@ -134,7 +136,7 @@ class DATA:
         return DATA(self.the, best), DATA(self.the, rest)
     
     def farapart(self, rows, sortp=None, a=None, b=None):
-        far = int(len(rows) * self.the.Far)
+        far = int(len(rows) * self.the.Far) // 1
         evals = 1 if a else 2
         # print("before a", a)
         a = a or random.choice(rows).neighbors(self, rows)[far]
@@ -143,21 +145,23 @@ class DATA:
         if sortp and b.d2h(self) < a.d2h(self):
             a, b = b, a
         return a, b, a.dist(b, self), evals
-    
-    def half(self, rows, sortp, before, evals=None):
-        some = self.util.many(rows, min(self.the.H, len(self.rows)))
-        # print("sortp: ", sortp, "before: ", before, "evals: ", evals)
+
+    def half(self, rows, sortp, before):
+        """
+        as_ = The better side, bs  = The worse side
+        a   = the better point, b  = The worse point
+        C   = distance from a to b
+        """
+        some = self.util.many(rows, min(self.the.Half, len(rows)))
         a, b, C, evals = self.farapart(some, sortp, before)
-        def d(row1, row2):
-            # print("Row1's", row1.cells)
+        def dist(row1, row2):
             return row1.dist(row2, self)
         def project(r):
             return (d(r, a)**2 + C**2 - d(r, b)**2) / (2 * C)
 
         as_, bs = [], []
         for n, row in enumerate(self.util.keysort(rows, project)):
-            print(len)
-            if n <= (len(self.rows) // 2 - 1):
+            if n <= (len(rows) // 2 - 1):
                 as_.append(row)
             else:
                 bs.append(row)
@@ -174,36 +178,41 @@ class DATA:
     def tree(self, sortp, _tree=None):
         evals = 0
 
+        return as_, bs, a, b, C, dist(a, bs[0]), evals
+
+    def tree(self, sortp):
+        evals = 0
+
         def _tree(data, above=None):
             nonlocal evals
             node = NODE(data)
-            # print("above is this: ", above)
-            if len(data.rows) > 2 * (len(self.rows) ** 0.5):
+            if len(data.rows) > 2 * len(self.rows) ** 0.5:
                 lefts, rights, node.left, node.right, node.C, node.cut, evals1 = self.half(data.rows, sortp, above)
-                evals += evals1
+                evals = evals + evals1
                 node.lefts = _tree(self.clone(lefts), node.left)
                 node.rights = _tree(self.clone(rights), node.right)
             return node
 
         return _tree(self), evals
-    
-#   Optimization via tecursive random projects. 
-#   `Half` then data, then recurse on the best half.
-    def branch(self, stop=None, rest=None, _branch=None, evals=1):
+
+    def branch(self, stop=None):
+        evals = 1
         rest = []
-        stop = stop or (2 * (len(self.rows) ** 0.5))
+        if not stop:
+            stop = (2 * (len(self.rows)) ** 0.5)
 
         def _branch(data, above=None, left=None, lefts=None, rights=None):
             nonlocal evals
             if len(data.rows) > stop:
-                lefts, rights, left = self.half(data.rows, True, above)
+                # as_, bs, a, b, C, dist(a, bs[0]), evals
+                lefts, rights, left, _, _, _, _ = self.half(data.rows, True, above)
                 evals += 1
                 rest.extend(rights)
                 return _branch(data.clone(lefts), left)
             else:
                 return self.clone(data.rows), self.clone(rest), evals
-
         return _branch(self)
+
 #data = DATA(src='../data/auto93.csv')
 
 #print(data.stats())
