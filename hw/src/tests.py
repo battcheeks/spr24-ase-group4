@@ -297,6 +297,13 @@ class Tests():
         print(evals1 + evals2)
 
     def test_detail(self):
+
+        def format_value(value):
+            if value == int(value):
+                return f'{int(value)}'
+            else:
+                return f'{value:.2f}'.rstrip('0').rstrip('.')
+
         self.reset_to_default_seed()
         smo_repeat_time = 20
         self.the.file = "../data/auto93.csv"
@@ -325,14 +332,14 @@ class Tests():
         title_str = separator.join(f'{title:<10}' for title in titles)
         print(f"names                      \t{title_str}\tD2h-")
 
-        value_str = separator.join(f'{value:<10.2f}' for value in mid_values)
+        value_str = separator.join(f'{format_value(value):<10}' for value in mid_values)
         print(f"mid                        \t{value_str}")
 
-        value_str = separator.join(f'{value:<10.2f}' for value in div_values)
+        value_str = separator.join(f'{format_value(value):<10}' for value in div_values)
         print(f"div                        \t{value_str}")
 
+        # smo with budget 9
         print("#")
-
         smo9_top_result = []
 
         budget0 = 4
@@ -357,21 +364,45 @@ class Tests():
             top_result = [round(cell, 2) for cell in best.rows[0].cells]
             top_result.append(best.rows[0].d2h(d))
 
-
             mid_result = [round(cell, 2) for cell in selected.mid().cells]
             mid_result.append(selected.mid().d2h(d))
 
-
             smo9_top_result.append(top_result)
-
 
         smo9_top_result = sorted(smo9_top_result, key=lambda x: x[-1])
 
         for i in range(smo_repeat_time):
-            value_str = separator.join(f'{value:<10.2f}' for value in smo9_top_result[i])
+            value_str = separator.join(f'{format_value(value):<10}' for value in smo9_top_result[i])
             print(f"smo9                        \t{value_str}")
 
+        # Random 50 
         print("#")
+        random_50_result = []
+
+        for _ in range(smo_repeat_time):
+            d.rows = self.util.shuffle(d.rows)
+
+            random_50_row = d.rows[:50]
+            random_50_row.sort(key=lambda a: a.d2h(d))
+
+            best_in_random_50_row = [round(cell, 2) for cell in random_50_row[0].cells]
+            best_in_random_50_row.append(random_50_row[0].d2h(d))
+
+            random_50_result.append(best_in_random_50_row)
+
+        random_50_result = sorted(random_50_result, key=lambda x: x[-1])
+        for i in range(smo_repeat_time):
+            value_str = separator.join(f'{format_value(value):<10}' for value in random_50_result[i])
+            print(f"any50                        \t{value_str}")
+
+        # Ceiling: Absolute best result
+        print("#")
+        d.rows.sort(key=lambda a: a.d2h(d))
+
+        absolute_best_result = [round(cell, 2) for cell in d.rows[0].cells]
+        absolute_best_result.append(d.rows[0].d2h(d))
+        value_str = separator.join(f'{format_value(value):<10}' for value in absolute_best_result)
+        print(f"100%                        \t{value_str}")
 
         # TODO
 
