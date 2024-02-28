@@ -54,5 +54,5 @@ class SYM:
             return 1
 
 #discritization
-def bin(self,x):
-    return x
+    def bin(self,x):
+        return x

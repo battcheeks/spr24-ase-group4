@@ -1,6 +1,7 @@
 from sym import SYM 
 from num import NUM 
 from data import DATA
+from Range import RANGE
 from learn import learn
 import random
 import math
@@ -11,13 +12,58 @@ class Tests():
     def __init__(self, the) -> None:
         ## Getting all the variables from the arguments.
         self.the = the
-        self.util = Utility()
+        self.util = Utility(the)
         
         self.all = [self.test_sym_1, self.test_sym_2, self.test_sym_3, self.test_num_1, self.test_num_2, self.test_num_3]
         self.num = [self.test_num_1, self.test_num_2, self.test_num_3]
         self.sym = [self.test_sym_1, self.test_sym_2, self.test_sym_3]
         pass
-
+    
+    ## Local Functions
+    
+    def _ranges(self, cols, rowss):
+        t = []
+        for col in cols:
+            for range in self._ranges1(col, rowss):
+                t.append(range)
+        return t
+    
+    def _ranges1(self, col, rowss):
+        out = {}
+        nrows = 0
+        for y, rows in rowss.items():
+            nrows += len(rows)
+            for row in rows:
+                x = row.cells[col.at]
+                if x != "?":
+                    bin = col.bin(x)
+                    if bin not in out:
+                        out[bin] = RANGE(self.the, col.at, col.txt, x)
+                    out[bin].add(x, y)
+        out = list(out.values())
+        out.sort(key=lambda a: a.x['lo'])
+        return out if hasattr(col, 'has') else self._mergeds(out, nrows / self.the.bins)
+    
+    def _mergeds(self, ranges, tooFew):
+        i, t = 0, []
+        while i < len(ranges):
+            a = ranges[i]
+            if i < len(ranges) - 1:
+                both = a.merged(ranges[i+1], tooFew)
+                if both:
+                    a = both
+                    i += 1
+            t.append(a)
+            i += 1
+        if len(t) < len(ranges):
+            return self._mergeds(t, tooFew)
+        for i in range(1, len(t)):
+            t[i].x['lo'] = t[i-1].x['hi']
+        t[0].x['lo'] = -math.inf
+        t[-1].x['hi'] = math.inf
+        return t
+    
+    ## Test Cases
     def reset_to_default_seed(self):
         random.seed(self.the.seed)
     
@@ -448,6 +494,35 @@ class Tests():
         print("tiny : {0}".format(round(tiny_value, 2)))
 
     # Running all the tests as per Class ##
+    
+    def test_bins(self):
+        d = DATA(self.the, self.the.file)
+        best, rest, evals = d.branch()
+        LIKE = best.rows
+        HATE = rest.rows[:3 * len(LIKE)]
+        self.util.shuffle(HATE)
+
+        def score(range):
+            return range.score("LIKE", len(LIKE), len(HATE))
+
+        t = []
+        print("OUTPUT 1:")
+        for col in d.cols.x:
+            print("")
+            for range in self._ranges1(col, {"LIKE": LIKE, "HATE": HATE}):
+                print(str(range))
+                t.append(range)
+
+        t.sort(key=score, reverse=True)
+        max_score = score(t[0])
+
+        print("\nOUTPUT 2:")
+        print("\n#scores:\n")
+        for v in t[:self.the.Beam]:
+            if score(v) > max_score * .1:
+                print(self.util.rnd(score(v)), v)
+
+        print({"LIKE": len(LIKE), "HATE": len(HATE)})
     
     def run_num_tests(self):
         for i in self.num:

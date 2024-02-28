@@ -14,7 +14,7 @@ class DATA:
         self.rows = []
         self.cols = None
         self.the = the
-        self.util = Utility()
+        self.util = Utility(the)
         self.adds(src, fun)
         # print("Construting..")
 

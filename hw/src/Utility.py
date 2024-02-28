@@ -24,7 +24,8 @@ DEFAULT_RANDOM_SEED = 31210  # random number seed
 
 
 class Utility:
-    def __init__(self) -> None:
+    def __init__(self, the=None) -> None:
+        self.the = the
         pass
 
     def l_csv(self, file="-"):
@@ -82,3 +83,21 @@ class Utility:
         u.sort(key=lambda a: a['y'])
         v = [xy['x'] for xy in u]
         return v
+
+    def entropy(self, t):
+        n = sum(t.values())
+        e = sum([-v/n * math.log(v/n, 2) for v in t.values()])
+        return e, n
+    
+    def score(self, t, goal, LIKE, HATE):
+        like, hate, tiny = 0, 0, 1E-30
+        for klass, n in t.items():
+            if klass == goal:
+                like += n
+            else:
+                hate += n
+        like, hate = like / (LIKE + tiny), hate / (HATE + tiny)
+        if hate > like:
+            return 0
+        else:
+            return like ** self.the.Support / (like + hate)
