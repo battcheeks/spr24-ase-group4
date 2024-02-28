@@ -61,6 +61,6 @@ class NUM:
         return abs(x - y)
 
     #bin ()
-    def bin(self, the, x):
-        tmp = (self.hi - self.lo) / (the.bins - 1)
+    def bin(self, x):
+        tmp = (self.hi - self.lo) / (self.the.bins - 1)
         return 1 if self.hi == self.lo else math.floor(x / tmp + 0.5) * tmp
