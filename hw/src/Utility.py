@@ -24,7 +24,7 @@ DEFAULT_RANDOM_SEED = 31210  # random number seed
 
 
 class Utility:
-    def __init__(self, the) -> None:
+    def __init__(self, the=None) -> None:
         self.the = the
         pass
 

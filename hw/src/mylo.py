@@ -95,6 +95,8 @@ def main():
         test.test_detail()
     elif args.task == "stats":
         test.test_stats()
+    elif args.task == "bins":
+        test.test_bins()
     elif args.task == "all":
         test.run_all_tests()
     else:
