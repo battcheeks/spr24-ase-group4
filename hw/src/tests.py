@@ -3,6 +3,10 @@ from num import NUM
 from data import DATA
 from Range import RANGE
 from learn import learn
+from stats import SAMPLE, eg0
+import copy
+import stats
+import re
 import random
 import math
 from Utility import Utility
@@ -456,23 +460,30 @@ class Tests():
         value_str = separator.join(f'{format_value(value):<10}' for value in absolute_best_result)
         print(f"100%                        \t{value_str}")
 
-        # TODO
+    """
+    bonr:
+         using the acquire function you've been using all along ((b+r)/(b-r))
+
+    RandN:
+         20 times, pull 90% of the data, sort by d2h, then report the top one.
+    """
+
+
+    def _get_best_d2h_with_rand(self, data, n):
+        tmp_rows = copy.deepcopy(data.rows)
+        random.shuffle(tmp_rows)
+        top_n_rows = tmp_rows[:n]
+        sorted_d2h_list = [row.d2h(data) for row in top_n_rows]
+        sorted_d2h_list.sort()
+        return sorted_d2h_list[0]
 
     def test_stats(self):
-
-        def format_value(value):
-            if value == int(value):
-                return f'{int(value)}'
-            else:
-                return f'{value:.2f}'.rstrip('0').rstrip('.')
-
         self.reset_to_default_seed()
         smo_repeat_time = 20
         self.the.file = "../data/auto93.csv"
 
         d = DATA(self.the, self.the.file)
 
-        self.reset_to_default_seed()
         print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         print("file : {0}".format(self.the.file))
         print("repeats : {0}".format(smo_repeat_time))
@@ -492,6 +503,64 @@ class Tests():
         standard_deviation = (mean_squared_diff) ** 0.5
         tiny_value = 0.35 * standard_deviation
         print("tiny : {0}".format(round(tiny_value, 2)))
+
+        test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358"]
+        # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
+        test_case_n = len(test_case)
+
+        test_case_output = ' '.join(f"#{item}" for item in test_case)
+        print(test_case_output)
+        print("#report{0}".format(test_case_n))
+
+        stat_dict = {}
+
+        # Do base first
+        d = DATA(self.the, self.the.file)
+        d2h_list = [round(row.d2h(d), 2) for row in d.rows]
+        stat_dict["base"] = d2h_list
+
+        for _ in range(20):
+            for test_type in test_case:
+                if test_type.startswith("base"):
+                    continue
+                elif test_type.startswith("bonr"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some)
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rand"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    d = DATA(self.the, self.the.file)
+                    best_d2h_in_random_rows = self._get_best_d2h_with_rand(d, budget)
+                    d2h_list.append(round(best_d2h_in_random_rows, 2))
+                    stat_dict[test_type] = d2h_list
+                else:
+                    # Unsupported type
+                    continue
+
+        slurp_list = []
+        for key, item in stat_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
 
     # Running all the tests as per Class ##
     
