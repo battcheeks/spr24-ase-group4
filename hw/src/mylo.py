@@ -97,6 +97,10 @@ def main():
         test.test_stats()
     elif args.task == "bins":
         test.test_bins()
+    elif args.task == "rules":
+        test.test_rules()
+    elif args.task == "rules2":
+        test.test_rules2()
     elif args.task == "all":
         test.run_all_tests()
     else:

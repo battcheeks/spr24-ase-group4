@@ -47,7 +47,8 @@ class Utility:
         if n.is_integer():
             return n
         mult = 10 ** (ndecs or 2)
-        return round(n * mult) / mult
+        rounded_n = round(n * mult) / mult
+        return round(rounded_n, 2)
 
     def shuffle(self, t):
         u = t[:]
@@ -91,13 +92,34 @@ class Utility:
     
     def score(self, t, goal, LIKE, HATE):
         like, hate, tiny = 0, 0, 1E-30
+        #print(t.items())
         for klass, n in t.items():
+            #print(klass, n)
             if klass == goal:
                 like += n
             else:
                 hate += n
         like, hate = like / (LIKE + tiny), hate / (HATE + tiny)
+        #print(like,hate)
         if hate > like:
             return 0
         else:
-            return like ** self.the.Support / (like + hate)
+            return like ** self.the.Support / (like+ tiny + hate+tiny)
+        
+    def powerset(self, s):
+        t = [[]]
+        for i in range(len(s)):
+            for j in range(len(t)):
+                t.append([s[i]] + t[j])
+        return t
+    
+    def l_o(t, self, n=None):
+        if isinstance(t, (int, float)):
+            return str(self.rnd(t, n))
+        if not isinstance(t, dict) and not isinstance(t, list):
+            return str(t)
+        u = []
+        for k, v in t.items() if isinstance(t, dict) else enumerate(t):
+            if str(k)[0] != "_":
+                u.append(self.l_o(v, n))
+        return "{" + ", ".join(u) + "}"

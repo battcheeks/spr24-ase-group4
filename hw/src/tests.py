@@ -3,6 +3,8 @@ from num import NUM
 from data import DATA
 from Range import RANGE
 from learn import learn
+from Rule import RULE
+from Rules import RULES
 from stats import SAMPLE, eg0
 import copy
 import stats
@@ -592,7 +594,78 @@ class Tests():
                 print(self.util.rnd(score(v)), v)
 
         print({"LIKE": len(LIKE), "HATE": len(HATE)})
-    
+
+    def test_rules(d, rowss, the, self):
+        print("inside rules")
+        for xxx in range(1):
+            d = DATA(the.file)
+            best0, rest, evals1 = d.branch(the.d)
+            best, _, evals2 = best0.branch(the.D)
+            print(evals1 + evals2 + the.D - 1)
+            LIKE = best.rows
+            HATE = Utility.slice(Utility.shuffle(rest.rows), 0, 3 * len(LIKE))
+            rowss = {'LIKE': LIKE, 'HATE': HATE}
+            rules_object = RULES(self._ranges(d.cols.x, rowss), "LIKE", rowss)
+            sorted_rules = sorted(rules_object.sorted, key=lambda rule: rule.scored)
+            for i, rule in enumerate(sorted_rules):
+                result = d.clone(rule.selects(rest.rows))
+                if len(result.rows) > 0:
+                    result.rows.sort(key=lambda row: row.d2h(d))
+                    print(
+                        Utility.rnd(rule.scored),
+                        Utility.rnd(result.mid().d2h(d)),
+                        Utility.rnd(result.rows[0].d2h(d)),
+                        Utility.l_o(result.mid().cells),
+                        "\t",
+                        rule.show()
+                    )
+                
+    def test_rules2(self):
+        #print("inside rules2")
+        d = DATA(self.the, self.the.file)
+
+        tmp = self.util.shuffle(d.rows)
+        train = d.clone(self.util.slice(tmp, 0, len(tmp) // 2))
+        test = d.clone(self.util.slice(tmp, len(tmp) // 2, len(tmp)))
+        test.rows.sort(key=lambda row: row.d2h(d))
+        print("base ", self.util.rnd(test.mid().d2h(d)), self.util.rnd(test.rows[0].d2h(d)), "\n")
+        test.rows = self.util.shuffle(test.rows)
+
+        best0, rest, evals1 = train.branch(self.the.d)
+        best, _, evals2 = best0.branch(self.the.D)
+        print(evals1+evals2+ self.the.D-1)
+
+        LIKE = best.rows
+        HATE = self.util.slice(self.util.shuffle(rest.rows), 0, 3 * len(LIKE))
+        print("LIKE " ,len(LIKE))
+        print("HATE ",len(HATE))
+        rowss = {'LIKE': LIKE, 'HATE': HATE}
+
+        test.rows = self.util.shuffle(test.rows)
+        #print(test.rows)
+        #print(Utility.slice(test.rows, 0, evals1 + evals2 + self.the.D - 1))
+        random = test.clone(self.util.slice(test.rows, 0, evals1 + evals2 + self.the.D - 1))
+        random.rows.sort(key=lambda row: row.d2h(d))
+
+        print("Score"+"\t\t\t"+"Mid Selected"+"\t\t\t\t\t\t\t"+"Rule")
+        print("-----"+"\t\t\t"+"------------"+"\t\t\t\t\t\t\t"+"------")
+        for i, rule in enumerate(RULES(self._ranges(train.cols.x, rowss), "LIKE", rowss, self.the).sorted):
+            result = train.clone(rule.selects(test.rows))
+            if len(result.rows) > 0:
+                result.rows.sort(key=lambda row: row.d2h(d))
+                #print(result.mid().cells)
+                rounded_cells = [round(value, 2) for value in result.mid().cells]
+                print(
+                    self.util.rnd(rule.scored),"\t",
+                    # self.util.rnd(result.mid().d2h(d)),"\t",
+                    # self.util.rnd(result.rows[0].d2h(d)), "\t",
+                    # self.util.rnd(random.mid().d2h(d)), "\t",
+                    # self.util.rnd(random.rows[0].d2h(d)),"\t",
+                    self.util.rnd(rounded_cells),
+                    "\t\t\t",
+                    rule.show()
+                )
+
     def run_num_tests(self):
         for i in self.num:
             i()
