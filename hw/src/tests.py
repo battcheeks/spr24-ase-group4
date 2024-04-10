@@ -13,6 +13,7 @@ import random
 import math
 from Utility import Utility
 from datetime import datetime
+from sklearn.cluster import KMeans
 
 class Tests():
     def __init__(self, the) -> None:
@@ -665,6 +666,202 @@ class Tests():
                     "\t\t\t",
                     rule.show()
                 )
+
+    def test_project(self):
+        pass
+        """
+        self.reset_to_default_seed()
+        smo_repeat_time = 20
+        self.the.file = "../data/auto93.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(smo_repeat_time))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        # Best
+        sorted_d = sorted(d.rows, key=lambda a: a.d2h(d))
+        print("best : {0}".format(round(sorted_d[0].d2h(d), 2)))
+
+        # Tiny
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+        tiny_value = 0.35 * standard_deviation
+        print("tiny : {0}".format(round(tiny_value, 2)))
+
+        test_case = ["base", "bonr9", "rand9",
+                    "bonr15", "rand15", "rrp4",
+                    "bonr25", "rand25", "rrp9",
+                    "bonr35", "rand35", "rrp15",
+                    "bonr35", "rand35", "rrp25", "rrp30", "rrp35", "rrp40", "rrp45",
+                    "rand358"]
+        # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
+        test_case_n = len(test_case)
+
+        test_case_output = ' '.join(f"#{item}" for item in test_case)
+        print(test_case_output)
+        print("#report{0}".format(test_case_n))
+
+        stat_dict = {}
+
+        # Do base first
+        d = DATA(self.the, self.the.file)
+        d2h_list = [round(row.d2h(d), 2) for row in d.rows]
+        stat_dict["base"] = d2h_list
+
+        for _ in range(20):
+            for test_type in test_case:
+                if test_type.startswith("base"):
+                    continue
+                elif test_type.startswith("bonr"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some)
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type[0] == 'b' and test_type[1:].isdigit():
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some, acquisition_type="b")
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rrp"):
+                    d2h_list = stat_dict.get(test_type, [])
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+
+                    tree_depth = int(match.group())
+                    best, rest, evals = d.branch()
+
+                    d2h_list.append(best.mid().d2h(d))
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("kmeans"):
+                    import numpy as np
+
+                    x_value_list = None
+                elif test_type.startswith("rand"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    d = DATA(self.the, self.the.file)
+                    best_d2h_in_random_rows = self._get_best_d2h_with_rand(d, budget)
+                    d2h_list.append(round(best_d2h_in_random_rows, 2))
+                    stat_dict[test_type] = d2h_list
+                else:
+                    # Unsupported type
+                    continue
+
+        slurp_list = []
+        for key, item in stat_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
+        """
+
+    def test_kmeans(self):
+        self.reset_to_default_seed()
+        self.the.file = "../data/SS-A.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+
+
+        data_array = np.array(x_data_rows)
+
+        from sklearn.cluster import KMeans
+
+        kmeans = KMeans(n_clusters=2, random_state=0)
+
+        kmeans.fit(data_array)
+
+        labels = kmeans.labels_
+
+        a = [d.cols.names]
+        b = [d.cols.names]
+
+        for index, row in enumerate(d.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a)))
+        print("Size of cluster B(1): {0}".format(len(b)))
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[x_field.at], 2) for x_field in d.cols.x]
+        b_mid_row_cells = [round(b_mid_row.cells[x_field.at], 2) for x_field in d.cols.x]
+
+        print("")
+        x_field = [x_field.txt for x_field in d.cols.x]
+        print("              {0}".format(x_field))
+        print("[A(0)] Mid row = {0}".format(a_mid_row_cells))
+        print("[B(1)] Mid row = {0}".format(b_mid_row_cells))
+
+        a_d2h = a_data.mid().d2h(d)
+        b_d2h = b_data.mid().d2h(d)
+
+        print("")
+        print("[A(0)] Mid d2h = {0}".format(a_d2h))
+        print("[B(1)] Mid d2h = {0}".format(b_d2h))
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
 
     def run_num_tests(self):
         for i in self.num:

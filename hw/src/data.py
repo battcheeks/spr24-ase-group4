@@ -91,7 +91,7 @@ class DATA:
             new.add(row)
         return new
     
-    def gate(self, budget0, budget, some):
+    def gate(self, budget0, budget, some, clustering_method=None):
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
@@ -99,8 +99,15 @@ class DATA:
         lite = rows[:budget0]
         dark = rows[budget0:]
         for i in range(budget):
-            best, rest = self.bestRest(lite, len(lite)**some)
+
+            if not clustering_method:
+                # Do SMO by default
+                best, rest = self.bestRest(lite, len(lite)**some)
+            elif clustering_method == "kmeans":
+                pass
+            
             todo, selected = self.split(best, rest, lite, dark)
+
             stats.append(selected.mid())
             bests.append(best.rows[0])
             lite.append(dark.pop(todo))
@@ -117,6 +124,21 @@ class DATA:
             if b > r:
                 selected.add(row)
             tmp = abs(b + r) / abs(b - r + 1E-300)
+            if tmp > max_val:
+                out, max_val = i, tmp
+        return out, selected
+
+    def split_by_b_over_r(self, best, rest, lite_rows, dark_rows):
+        selected = DATA(self.the, [self.cols.names])
+        max_val = 1E30
+        out = 1
+        # print(dark_rows)
+        for i, row in enumerate(dark_rows):
+            b = row.like(best, len(lite_rows), 2)
+            r = row.like(rest, len(lite_rows), 2)
+            if b > r:
+                selected.add(row)
+            tmp = abs(b) / abs(r + 1E-300)
             if tmp > max_val:
                 out, max_val = i, tmp
         return out, selected

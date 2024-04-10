@@ -101,6 +101,10 @@ def main():
         test.test_rules()
     elif args.task == "rules2":
         test.test_rules2()
+    elif args.task == "project":
+        test.test_project()
+    elif args.task == "kmeans":
+        test.test_kmeans()
     elif args.task == "all":
         test.run_all_tests()
     else:
