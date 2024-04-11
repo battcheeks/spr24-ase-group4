@@ -483,7 +483,7 @@ class Tests():
     def test_stats(self):
         self.reset_to_default_seed()
         smo_repeat_time = 20
-        self.the.file = "../data/auto93.csv"
+        # self.the.file = "../data/auto93.csv"
 
         d = DATA(self.the, self.the.file)
 
@@ -668,8 +668,6 @@ class Tests():
                 )
 
     def test_project(self):
-        pass
-        """
         self.reset_to_default_seed()
         smo_repeat_time = 20
         self.the.file = "../data/auto93.csv"
@@ -763,7 +761,7 @@ class Tests():
                         continue
 
                     tree_depth = int(match.group())
-                    best, rest, evals = d.branch()
+                    best, rest, evals = d.branch(tree_depth)
 
                     d2h_list.append(best.mid().d2h(d))
                     stat_dict[test_type] = d2h_list
@@ -791,7 +789,6 @@ class Tests():
         for key, item in stat_dict.items():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
-        """
 
     def test_kmeans(self):
         self.reset_to_default_seed()
@@ -862,6 +859,81 @@ class Tests():
             best = b_data
             rest = a_data
 
+    def test_kmeans2(self):
+        self.reset_to_default_seed()
+        self.the.file = "../data/SS-A.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+
+
+        data_array = np.array(x_data_rows)
+
+        from sklearn.cluster import KMeans
+
+        kmeans = KMeans(n_clusters=2, random_state=0)
+
+        kmeans.fit(data_array)
+
+        labels = kmeans.labels_
+
+        a = [d.cols.names]
+        b = [d.cols.names]
+
+        for index, row in enumerate(d.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a)))
+        print("Size of cluster B(1): {0}".format(len(b)))
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_data.rows.sort(key=lambda x: x.d2h(d))
+        b_data.rows.sort(key=lambda x: x.d2h(d))
+
+        a_best_row_cells = [round(a_data.rows[0].cells[x_field.at], 2) for x_field in d.cols.x]
+        b_best_row_cells = [round(b_data.rows[0].cells[x_field.at], 2) for x_field in d.cols.x]
+
+        print("")
+        x_field = [x_field.txt for x_field in d.cols.x]
+        print("              {0}".format(x_field))
+        print("[A(0)] Mid row = {0}".format(a_best_row_cells))
+        print("[B(1)] Mid row = {0}".format(b_best_row_cells))
+
+        a_d2h = a_data.rows[0].d2h(d)
+        b_d2h = b_data.rows[0].d2h(d)
+
+        print("")
+        print("[A(0)] Mid d2h = {0}".format(a_d2h))
+        print("[B(1)] Mid d2h = {0}".format(b_d2h))
+        
+        print(a_data.rows[0].cells)
+        print("Highest Throughput+:", a_data.cols.all[3].hi)
+        print("Lowest Throughput+:", a_data.cols.all[3].lo)
+        
+        print("Highest Latency-:", a_data.cols.all[4].hi)
+        print("Lowest Latency-:", a_data.cols.all[4].lo)
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
 
     def run_num_tests(self):
         for i in self.num:

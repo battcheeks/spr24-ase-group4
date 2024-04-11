@@ -105,6 +105,8 @@ def main():
         test.test_project()
     elif args.task == "kmeans":
         test.test_kmeans()
+    elif args.task == "kmeans2":
+        test.test_kmeans2()
     elif args.task == "all":
         test.run_all_tests()
     else:
