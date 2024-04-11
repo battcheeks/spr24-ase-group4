@@ -157,38 +157,33 @@ class DATA:
                 rest.append(row)
         return DATA(self.the, best), DATA(self.the, rest)
     
-    def farapart(self, rows, sortp=None, a=None, b=None):
-        far = int(len(rows) * self.the.Far) // 1
-        evals = 1 if a else 2
-        a = a or random.choice(rows).neighbors(self, rows)[far]
-        b = a.neighbors(self, rows)[far]
-        if sortp and b.d2h(self) < a.d2h(self):
-            a, b = b, a
-        return a, b, a.dist(b, self), evals
+    def farapart(self, rows, sortp=None, before=None):
+        far = int(len(rows) * self.the.Far)
+        evals = 1 if before else 2
+        left = before or random.choice(rows).neighbors(self, rows)[far]
+        right = left.neighbors(self, rows)[far]
+        if sortp and right.d2h(self) < left.d2h(self):
+            left, right = right, left
+        return left, right, left.dist(right, self), evals
 
-    def half(self, rows, sortp, before):
-        """
-        as_ = The better side, bs  = The worse side
-        a   = the better point, b  = The worse point
-        C   = distance from a to b
-        """
-        some = self.util.many(rows, min(self.the.Half, len(rows)))
-        a, b, C, evals = self.farapart(some, sortp, before)
-        def dist(row1, row2):
-            return row1.dist(row2, self)
-        def project(r):
-            return (dist(r, a)**2 + C**2 - dist(r, b)**2) / (2 * C)
 
-        as_, bs = [], []
-        for n, row in enumerate(self.util.keysort(rows, project)):
-            if n <= (len(rows) // 2 - 1):
-                as_.append(row)
+    def half(self, rows, sortp=False, before=None):
+        def dist(r1, r2): return r1.dist(r2, self)
+        def proj(row)  : return (dist(row,left)**2 + C**2 - dist(row,right)**2)/(2*C)
+        left, right, C, _ = self.farapart(random.choices(rows, k=min(self.the.Half, len(rows))), sortp=sortp, before=before)
+
+        lefts,rights = [],[]
+
+        for n, row in enumerate(sorted(rows , key=proj)):
+            if n < len(rows) / 2 :
+                lefts.append(row)
             else:
-                bs.append(row)
+                rights.append(row)
 
-        return as_, bs, a, b, C, dist(a, bs[0]), evals
+        return lefts, rights, left, right
 
     def tree(self, sortp):
+        pass
         evals = 0
 
         def _tree(data, above=None):
@@ -203,23 +198,16 @@ class DATA:
 
         return _tree(self), evals
 
-    def branch(self, stop=None):
-        evals = 1
-        rest = []
-        if not stop:
-            stop = (2 * (len(self.rows)) ** 0.5)
 
-        def _branch(data, above=None, left=None, lefts=None, rights=None):
-            nonlocal evals
-            if len(data.rows) > stop:
-                # as_, bs, a, b, C, dist(a, bs[0]), evals
-                lefts, rights, left, _, _, _, _ = self.half(data.rows, True, above)
-                evals += 1
-                rest.extend(rights)
-                return _branch(data.clone(lefts), left)
-            else:
-                return self.clone(data.rows), self.clone(rest), evals
-        return _branch(self)
+    def branch(self, rows=None, stop=None, rest=None, evals=1, before=None):
+        rows = rows or self.rows
+        stop = stop or 2 * len(rows) ** 0.5
+        rest = rest or []
+        if len(rows) > stop:
+            lefts, rights, left, right  = self.half(rows, True, before)
+            return self.branch(lefts, stop, rest+rights, evals+1, left)
+        else:
+            return self.clone(rows), self.clone(rest), evals
 
 #data = DATA(src='../data/auto93.csv')
 

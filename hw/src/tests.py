@@ -696,9 +696,9 @@ class Tests():
 
         test_case = ["base", "bonr9", "rand9",
                     "bonr15", "rand15", "rrp4",
-                    "bonr25", "rand25", "rrp9",
-                    "bonr35", "rand35", "rrp15",
-                    "bonr35", "rand35", "rrp25", "rrp30", "rrp35", "rrp40", "rrp45",
+                    "bonr25", "rand25", "rrp5",
+                    "bonr35", "rand35", "rrp6",
+                    "bonr35", "rand35", "rrp7", "rrp8", "rrp9",
                     "rand358"]
         # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
         test_case_n = len(test_case)
@@ -761,7 +761,7 @@ class Tests():
                         continue
 
                     tree_depth = int(match.group())
-                    best, rest, evals = d.branch(tree_depth)
+                    best, rest, evals = d.branch(stop=tree_depth)
 
                     d2h_list.append(best.mid().d2h(d))
                     stat_dict[test_type] = d2h_list
