@@ -105,8 +105,14 @@ def main():
         test.test_project()
     elif args.task == "kmeans":
         test.test_kmeans()
+    elif args.task == "km_opt":
+        test.find_best_kmeans_parameter()
     elif args.task == "kmeans2":
         test.test_kmeans2()
+    elif args.task == "sc":
+        test.test_spectral_clustering()
+    elif args.task == "sc_opt":
+        test.find_best_n_neighbors_for_sc()
     elif args.task == "all":
         test.run_all_tests()
     else:

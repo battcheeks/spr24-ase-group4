@@ -14,6 +14,8 @@ import math
 from Utility import Utility
 from datetime import datetime
 from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
+from sklearn.metrics import silhouette_score
 
 class Tests():
     def __init__(self, the) -> None:
@@ -790,11 +792,21 @@ class Tests():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
 
-    def test_kmeans(self):
+    def find_best_kmeans_parameter(self):
+        # Used to find to best parameter for kmeans
+
         self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
         self.the.file = "../data/SS-A.csv"
+        self.the.file = "../data/SS-B.csv"
+        self.the.file = "../data/SS-C.csv"
+        self.the.file = "../data/SS-D.csv"
+
+        print("Data file: {0}".format(self.the.file))
 
         d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
 
         import numpy as np
 
@@ -805,14 +817,54 @@ class Tests():
                 new_x_data.append(row.cells[x_field.at])
             x_data_rows.append(new_x_data)
 
+        data_array = np.array(x_data_rows)
 
+        init_methods = ['k-means++', 'random']
+        max_iter_options = [100, 300, 500, 1000]
+        best_score = -1
+        best_params = {}
+
+        for init in init_methods:
+            for max_iter in max_iter_options:
+                kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed)
+                labels = kmeans.fit_predict(data_array)
+                score = silhouette_score(data_array, labels)
+                print(f"Init method: {init}, max_iter: {max_iter}, Silhouette Score: {score}")
+
+                if score > best_score:
+                    best_score = score
+                    best_params = {'init': init, 'max_iter': max_iter}
+
+        print("\n[Best configuration]")
+        print("Best Init method:", best_params['init'])
+        print("Best max_iter:", best_params['max_iter'])
+
+
+    def test_kmeans(self):
+        DEFAULT_BEST_MAX_ITER = 100
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+
+
+        print("Data file: {0}".format(self.the.file))
+
+        d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
 
         data_array = np.array(x_data_rows)
 
-        from sklearn.cluster import KMeans
-
-        kmeans = KMeans(n_clusters=2, random_state=0)
-
+        kmeans = KMeans(n_clusters=2, init='k-means++', max_iter=DEFAULT_BEST_MAX_ITER, random_state=self.the.seed)
         kmeans.fit(data_array)
 
         labels = kmeans.labels_
@@ -826,22 +878,22 @@ class Tests():
             else:
                 b.append(row)
 
-        print("")
-        print("Size of cluster A(0): {0}".format(len(a)))
-        print("Size of cluster B(1): {0}".format(len(b)))
-
         a_data = DATA(self.the, a)
         b_data = DATA(self.the, b)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a_data.rows)))
+        print("Size of cluster B(1): {0}".format(len(b_data.rows)))
 
         a_mid_row = a_data.mid()
         b_mid_row = b_data.mid()
 
-        a_mid_row_cells = [round(a_mid_row.cells[x_field.at], 2) for x_field in d.cols.x]
-        b_mid_row_cells = [round(b_mid_row.cells[x_field.at], 2) for x_field in d.cols.x]
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in d.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in d.cols.all]
 
         print("")
-        x_field = [x_field.txt for x_field in d.cols.x]
-        print("              {0}".format(x_field))
+        field_name = [field.txt for field in d.cols.all]
+        print("              {0}".format(field_name))
         print("[A(0)] Mid row = {0}".format(a_mid_row_cells))
         print("[B(1)] Mid row = {0}".format(b_mid_row_cells))
 
@@ -859,6 +911,8 @@ class Tests():
             best = b_data
             rest = a_data
 
+
+
     def test_kmeans2(self):
         self.reset_to_default_seed()
         self.the.file = "../data/SS-A.csv"
@@ -874,11 +928,7 @@ class Tests():
                 new_x_data.append(row.cells[x_field.at])
             x_data_rows.append(new_x_data)
 
-
-
         data_array = np.array(x_data_rows)
-
-        from sklearn.cluster import KMeans
 
         kmeans = KMeans(n_clusters=2, random_state=0)
 
@@ -895,12 +945,12 @@ class Tests():
             else:
                 b.append(row)
 
-        print("")
-        print("Size of cluster A(0): {0}".format(len(a)))
-        print("Size of cluster B(1): {0}".format(len(b)))
-
         a_data = DATA(self.the, a)
         b_data = DATA(self.the, b)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a_data.rows)))
+        print("Size of cluster B(1): {0}".format(len(b_data.rows)))
 
         a_data.rows.sort(key=lambda x: x.d2h(d))
         b_data.rows.sort(key=lambda x: x.d2h(d))
@@ -934,6 +984,125 @@ class Tests():
         else:
             best = b_data
             rest = a_data
+
+
+    def find_best_n_neighbors_for_sc(self):
+        # Used to find to best parameter for spectral_clustering
+
+        import warnings
+        warnings.filterwarnings("ignore", message="Graph is not fully connected, spectral embedding may not work as expected.")
+
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+        #self.the.file = "../data/SS-B.csv"
+        #self.the.file = "../data/SS-C.csv"
+
+        print("Data file: {0}".format(self.the.file))
+
+        d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        best_score = -1
+        best_n = 0
+        for n in range(10, 81, 10):
+
+            try:
+                model = SpectralClustering(n_clusters=2, affinity='nearest_neighbors', n_neighbors=n)
+                labels = model.fit_predict(data_array)
+            except Warning as e:
+                print("[n_neighbors = {0}]Spectral Clustering may not perform as expected due to data connectivity issues.".format(n))
+
+            score = silhouette_score(data_array, labels)
+            if score > best_score:
+                best_score = score
+                best_n = n
+
+        print("Best n_neighbors:", best_n)
+        print("Best silhouette score:", best_score)
+
+    def test_spectral_clustering(self):
+        DEFAULT_BEST_N_NEIGHBORS = 50
+
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+
+        print("Data file: {0}".format(self.the.file))
+
+        d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        model = SpectralClustering(n_clusters=2, affinity='nearest_neighbors', n_neighbors=DEFAULT_BEST_N_NEIGHBORS)
+
+        labels = model.fit_predict(data_array)
+
+        a = [d.cols.names]
+        b = [d.cols.names]
+
+        for index, row in enumerate(d.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a_data.rows)))
+        print("Size of cluster B(1): {0}".format(len(b_data.rows)))
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in d.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in d.cols.all]
+
+        print("")
+        field_name = [field.txt for field in d.cols.all]
+        print("              {0}".format(field_name))
+        print("[A(0)] Mid row = {0}".format(a_mid_row_cells))
+        print("[B(1)] Mid row = {0}".format(b_mid_row_cells))
+
+        a_d2h = a_data.mid().d2h(d)
+        b_d2h = b_data.mid().d2h(d)
+
+        print("")
+        print("[A(0)] Mid d2h = {0}".format(a_d2h))
+        print("[B(1)] Mid d2h = {0}".format(b_d2h))
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
 
     def run_num_tests(self):
         for i in self.num:
