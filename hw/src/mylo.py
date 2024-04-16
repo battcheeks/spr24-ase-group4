@@ -117,6 +117,8 @@ def main():
         test.test_gaussian_mixtures()
     elif args.task == "gm_opt":
         test.find_best_parameter_for_gaussian_mixtures()
+    elif args.task == "rrp":
+        test.test_generalize_rrp()
     elif args.task == "all":
         test.run_all_tests()
     else:

@@ -206,7 +206,7 @@ class DATA:
             best = b_data
             rest = a_data
 
-        return best, rest
+        return best.rows, rest.rows, best.mid(), rest.mid()
 
     def split_row_with_spectral_clustering(self, rows, affinity='nearest_neighbors', n_neighbors=50):
         x_data_rows = []
@@ -250,7 +250,7 @@ class DATA:
             best = b_data
             rest = a_data
 
-        return best, rest
+        return best.rows, rest.rows, best.mid(), rest.mid()
 
     def split_row_with_gaussian_mixtures(self, rows, covariance_type='full', max_iter=100):
         x_data_rows = []
@@ -296,7 +296,7 @@ class DATA:
             best = b_data
             rest = a_data
 
-        return best, rest
+        return best.rows, rest.rows, best.mid(), rest.mid()
 
     def farapart(self, rows, sortp=None, before=None):
         far = int(len(rows) * self.the.Far)
@@ -345,6 +345,53 @@ class DATA:
         rest = rest or []
         if len(rows) > stop:
             lefts, rights, left, right  = self.half(rows, True, before)
+            return self.branch(lefts, stop, rest+rights, evals+1, left)
+        else:
+            return self.clone(rows), self.clone(rest), evals
+
+
+    def rrp(self, rows=None, stop=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
+        rows = rows or self.rows
+        stop = stop or 2 * len(rows) ** 0.5
+        rest = rest or []
+        if len(rows) > stop:
+            if cluserting_algo_type == "projection":
+                lefts, rights, left, right  = self.half(rows, True, before)
+            elif cluserting_algo_type == "kmeans":
+                init = clustering_parameter_dict.get("init")
+                max_iter = clustering_parameter_dict.get("max_iter")
+
+                kwargs = {}
+                if init:
+                    kwargs['init'] = init
+                if max_iter:
+                    kwargs['max_iter'] = max_iter
+
+                lefts, rights, left, right  = self.split_row_with_kmeans(rows, **kwargs)
+            elif cluserting_algo_type == "spectral_clustering":
+                affinity = clustering_parameter_dict.get("affinity")
+                n_neighbors = clustering_parameter_dict.get("n_neighbors")
+
+                kwargs = {}
+                if affinity:
+                    kwargs['affinity'] = affinity
+                if n_neighbors:
+                    kwargs['n_neighbors'] = n_neighbors
+
+                lefts, rights, left, right  = self.split_row_with_spectral_clustering(rows, **kwargs)
+            elif cluserting_algo_type == "gaussian_mixtures":
+                covariance_type = clustering_parameter_dict.get("covariance_type")
+                max_iter = clustering_parameter_dict.get("max_iter")
+                kwargs = {}
+                if covariance_type:
+                    kwargs['covariance_type'] = covariance_type
+                if max_iter:
+                    kwargs['max_iter'] = max_iter
+
+                lefts, rights, left, right  = self.split_row_with_gaussian_mixtures(rows, **kwargs)
+            else:
+                raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(cluserting_algo_type))
+
             return self.branch(lefts, stop, rest+rights, evals+1, left)
         else:
             return self.clone(rows), self.clone(rest), evals

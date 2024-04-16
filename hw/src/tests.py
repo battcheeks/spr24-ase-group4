@@ -1233,6 +1233,147 @@ class Tests():
             best = b_data
             rest = a_data
 
+    def test_generalize_rrp(self):
+        self.reset_to_default_seed()
+        smo_repeat_time = 20
+        self.the.file = "../data/auto93.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(smo_repeat_time))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        # Best
+        sorted_d = sorted(d.rows, key=lambda a: a.d2h(d))
+        print("best : {0}".format(round(sorted_d[0].d2h(d), 2)))
+
+        # Tiny
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+        tiny_value = 0.35 * standard_deviation
+        print("tiny : {0}".format(round(tiny_value, 2)))
+
+        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
+                    "rrp4_projection", "rrp5_projection", "rrp6_projection", "rrp7_projection", "rrp8_projection", "rrp9_projection",
+                    "rrp4_kmeans", "rrp5_kmeans", "rrp6_kmeans", "rrp7_kmeans", "rrp8_kmeans", "rrp9_kmeans",
+                    "rrp4_sc", "rrp5_sc", "rrp6_sc", "rrp7_sc", "rrp8_sc", "rrp9_sc",
+                    "rrp4_gm", "rrp5_gm", "rrp6_gm", "rrp7_gm", "rrp8_gm", "rrp9_gm",
+                    "rand9", "rand15", "rand25", "rand35", "rand358"]
+        # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
+        test_case_n = len(test_case)
+
+        test_case_output = ' '.join(f"#{item}" for item in test_case)
+        print(test_case_output)
+        print("#report{0}".format(test_case_n))
+
+        stat_dict = {}
+
+        # Do base first
+        d = DATA(self.the, self.the.file)
+        d2h_list = [round(row.d2h(d), 2) for row in d.rows]
+        stat_dict["base"] = d2h_list
+
+        for _ in range(20):
+            for test_type in test_case:
+                if test_type.startswith("base"):
+                    continue
+                elif test_type.startswith("bonr"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some)
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type[0] == 'b' and test_type[1:].isdigit():
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some, acquisition_type="b")
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rrp"):
+                    d2h_list = stat_dict.get(test_type, [])
+                    match = re.search(r'rrp(\d+)_(\w+)', test_type)
+                    if not match:
+                        continue
+
+                    tree_depth = int(match.group(1))
+                    clustering_algo = match.group(2)
+                    clustering_parameter_dict = {}
+
+                    if clustering_algo == "projection":
+                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
+                    elif clustering_algo == "kmeans":
+
+                        clustering_parameter_dict["affinity"] = "k-means++"
+                        clustering_parameter_dict["max_iter"] = 100
+
+                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
+                    elif clustering_algo == "sc":
+                        clustering_parameter_dict["init"] = "nearest_neighbors"
+                        clustering_parameter_dict["n_neighbors"] = 50
+
+                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
+                    elif clustering_algo == "gm":
+                        clustering_parameter_dict["covariance_type"] = "full"
+                        clustering_parameter_dict["max_iter"] = 100
+
+                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
+                    else:
+                        raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
+
+                    d2h_list.append(best.mid().d2h(d))
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rand"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    d = DATA(self.the, self.the.file)
+                    best_d2h_in_random_rows = self._get_best_d2h_with_rand(d, budget)
+                    d2h_list.append(round(best_d2h_in_random_rows, 2))
+                    stat_dict[test_type] = d2h_list
+                else:
+                    # Unsupported type
+                    continue
+
+        slurp_list = []
+        for key, item in stat_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
+
     def run_num_tests(self):
         for i in self.num:
             i()
