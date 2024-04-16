@@ -113,6 +113,10 @@ def main():
         test.test_spectral_clustering()
     elif args.task == "sc_opt":
         test.find_best_n_neighbors_for_sc()
+    elif args.task == "gm":
+        test.test_gaussian_mixtures()
+    elif args.task == "gm_opt":
+        test.find_best_parameter_for_gaussian_mixtures()
     elif args.task == "all":
         test.run_all_tests()
     else:

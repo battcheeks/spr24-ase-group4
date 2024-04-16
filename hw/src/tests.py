@@ -16,6 +16,7 @@ from datetime import datetime
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_score
+from sklearn.mixture import GaussianMixture
 
 class Tests():
     def __init__(self, the) -> None:
@@ -1103,6 +1104,134 @@ class Tests():
             best = b_data
             rest = a_data
 
+    def find_best_parameter_for_gaussian_mixtures(self):
+        # Used to find to best parameter for spectral_clustering
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+        #self.the.file = "../data/SS-B.csv"
+        #self.the.file = "../data/SS-C.csv"
+
+        print("Data file: {0}".format(self.the.file))
+
+        d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        covariance_types = ['full', 'tied', 'diag', 'spherical']
+        tols = [0.001, 0.01, 0.1]
+        max_iters = [100, 200, 300]
+
+        best_gmm = None
+        lowest_bic = np.inf
+
+        best_covariance_type = None
+        best_tol = None
+        best_max_iter = None
+
+        for covariance_type in covariance_types:
+            for tol in tols:
+                for max_iter in max_iters:
+                    gmm = GaussianMixture(n_components=2, covariance_type=covariance_type,
+                                          tol=tol, max_iter=max_iter, random_state=0)
+                    gmm.fit(data_array)
+
+                    bic = gmm.bic(data_array)
+                    if bic < lowest_bic:
+                        lowest_bic = bic
+                        best_gmm = gmm
+                        best_covariance_type = covariance_type
+                        best_tol = tol
+                        best_max_iter = max_iter
+
+        print("Best GMM:", best_gmm)
+        print("best_covariance_type = {0}".format(best_covariance_type))
+        print("best_tol = {0}".format(best_tol))
+        print("best_max_iter = {0}".format(best_max_iter))
+
+    def test_gaussian_mixtures(self):
+        DEFAULT_COVARIANCE_TYPE = "full"
+        DEFAULT_MAX_ITER = 100
+
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+
+        print("Data file: {0}".format(self.the.file))
+
+        d = DATA(self.the, self.the.file)
+
+        print("Size of data: {0}".format(len(d.rows)))
+
+        import numpy as np
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        model = GaussianMixture(n_components=2, covariance_type=DEFAULT_COVARIANCE_TYPE, max_iter=DEFAULT_MAX_ITER, random_state=0)
+
+        model.fit(data_array)
+
+        labels = model.predict(data_array)
+
+        a = [d.cols.names]
+        b = [d.cols.names]
+
+        for index, row in enumerate(d.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        print("")
+        print("Size of cluster A(0): {0}".format(len(a_data.rows)))
+        print("Size of cluster B(1): {0}".format(len(b_data.rows)))
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in d.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in d.cols.all]
+
+        print("")
+        field_name = [field.txt for field in d.cols.all]
+        print("              {0}".format(field_name))
+        print("[A(0)] Mid row = {0}".format(a_mid_row_cells))
+        print("[B(1)] Mid row = {0}".format(b_mid_row_cells))
+
+        a_d2h = a_data.mid().d2h(d)
+        b_d2h = b_data.mid().d2h(d)
+
+        print("")
+        print("[A(0)] Mid d2h = {0}".format(a_d2h))
+        print("[B(1)] Mid d2h = {0}".format(b_d2h))
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
 
     def run_num_tests(self):
         for i in self.num:

@@ -3,6 +3,11 @@ from ROW import ROW
 from COLS import Cols as COLS
 from node import NODE
 import random
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
+from sklearn.metrics import silhouette_score
+from sklearn.mixture import GaussianMixture
 
 # ----------------------------------------------------------------------------
 # Data Class
@@ -156,7 +161,143 @@ class DATA:
             else:
                 rest.append(row)
         return DATA(self.the, best), DATA(self.the, rest)
-    
+
+
+    def split_row_with_kmeans(self, rows, init='k-means++', max_iter=100):
+        x_data_rows = []
+        for row in rows:
+            new_x_data = []
+            for x_field in self.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed)
+        kmeans.fit(data_array)
+
+        labels = kmeans.labels_
+
+        a = [self.cols.names]
+        b = [self.cols.names]
+
+        for index, row in enumerate(self.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in self.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in self.cols.all]
+
+        a_d2h = a_data.mid().d2h(self)
+        b_d2h = b_data.mid().d2h(self)
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
+        return best, rest
+
+    def split_row_with_spectral_clustering(self, rows, affinity='nearest_neighbors', n_neighbors=50):
+        x_data_rows = []
+        for row in rows:
+            new_x_data = []
+            for x_field in self.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        model = SpectralClustering(n_clusters=2, affinity=affinity, n_neighbors=n_neighbors)
+
+        labels = model.fit_predict(data_array)
+
+        a = [self.cols.names]
+        b = [self.cols.names]
+
+        for index, row in enumerate(self.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in self.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in self.cols.all]
+
+        a_d2h = a_data.mid().d2h(self)
+        b_d2h = b_data.mid().d2h(self)
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
+        return best, rest
+
+    def split_row_with_gaussian_mixtures(self, rows, covariance_type='full', max_iter=100):
+        x_data_rows = []
+        for row in rows:
+            new_x_data = []
+            for x_field in self.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        model = GaussianMixture(n_components=2, covariance_type=covariance_type, max_iter=max_iter, random_state=self.the.seed)
+
+        model.fit(data_array)
+
+        labels = model.predict(data_array)
+
+        a = [self.cols.names]
+        b = [self.cols.names]
+
+        for index, row in enumerate(self.rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in self.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in self.cols.all]
+
+        a_d2h = a_data.mid().d2h(self)
+        b_d2h = b_data.mid().d2h(self)
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
+        return best, rest
+
     def farapart(self, rows, sortp=None, before=None):
         far = int(len(rows) * self.the.Far)
         evals = 1 if before else 2
@@ -197,7 +338,6 @@ class DATA:
             return node
 
         return _tree(self), evals
-
 
     def branch(self, rows=None, stop=None, rest=None, evals=1, before=None):
         rows = rows or self.rows
