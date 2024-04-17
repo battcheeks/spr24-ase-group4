@@ -337,6 +337,7 @@ class Tests():
         best, rest, evals = d.branch()
         best_data = [round(cell, 2) for cell in best.mid().cells]
         print("Best: {0}".format(best_data))
+        print("TESTING", best.mid().d2h(d), evals)
         rest_data = [round(cell, 2) for cell in rest.mid().cells]
         print("Rest: {0}".format(rest_data))
         print("evals: {0}".format(evals))
@@ -914,78 +915,99 @@ class Tests():
 
 
 
-    def test_kmeans2(self):
+    def test_rkmeans(self):
         self.reset_to_default_seed()
-        self.the.file = "../data/SS-A.csv"
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
 
-        d = DATA(self.the, self.the.file)
+        print("Data file: {0}".format(self.the.file))
 
-        import numpy as np
+        data = DATA(self.the, self.the.file)
 
-        x_data_rows = []
-        for row in d.rows:
-            new_x_data = []
-            for x_field in d.cols.x:
-                new_x_data.append(row.cells[x_field.at])
-            x_data_rows.append(new_x_data)
+        best9, best9_d2h, evals = data.recursive_kmeans(9)
+        best7, best7_d2h, evals = data.recursive_kmeans(7)
+        best5, best5_d2h, evals = data.recursive_kmeans(5)
 
-        data_array = np.array(x_data_rows)
+        best9_mid = best9.mid()
+        best7_mid = best7.mid()
+        best5_mid = best5.mid()
 
-        kmeans = KMeans(n_clusters=2, random_state=0)
-
-        kmeans.fit(data_array)
-
-        labels = kmeans.labels_
-
-        a = [d.cols.names]
-        b = [d.cols.names]
-
-        for index, row in enumerate(d.rows):
-            if labels[index] == 0:
-                a.append(row)
-            else:
-                b.append(row)
-
-        a_data = DATA(self.the, a)
-        b_data = DATA(self.the, b)
+        best9_cell = [round(best9_mid.cells[field.at], 2) for field in data.cols.all]
+        best7_cell = [round(best7_mid.cells[field.at], 2) for field in data.cols.all]
+        best5_cell = [round(best5_mid.cells[field.at], 2) for field in data.cols.all]
 
         print("")
-        print("Size of cluster A(0): {0}".format(len(a_data.rows)))
-        print("Size of cluster B(1): {0}".format(len(b_data.rows)))
+        field_name = [field.txt for field in data.cols.all]
+        print("           {0}".format(field_name))
+        print("Best Row (9) = {0}".format(best9_cell))
+        print("d2h = {0}\n".format(best9_d2h))
+        print("Best Row (7) = {0}".format(best7_cell))
+        print("d2h = {0}\n".format(best7_d2h))
+        print("Best Row (5) = {0}".format(best5_cell))
+        print("d2h = {0}\n".format(best5_d2h))
 
-        a_data.rows.sort(key=lambda x: x.d2h(d))
-        b_data.rows.sort(key=lambda x: x.d2h(d))
+    def test_rspectral_clustering(self):
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
 
-        a_best_row_cells = [round(a_data.rows[0].cells[x_field.at], 2) for x_field in d.cols.x]
-        b_best_row_cells = [round(b_data.rows[0].cells[x_field.at], 2) for x_field in d.cols.x]
+        print("Data file: {0}".format(self.the.file))
+
+        data = DATA(self.the, self.the.file)
+
+        best9, best9_d2h, evals = data.recursive_spectral_clustering(9)
+        best7, best7_d2h, evals = data.recursive_spectral_clustering(7)
+        best5, best5_d2h, evals = data.recursive_spectral_clustering(5)
+
+        best9_mid = best9.mid()
+        best7_mid = best7.mid()
+        best5_mid = best5.mid()
+
+        best9_cell = [round(best9_mid.cells[field.at], 2) for field in data.cols.all]
+        best7_cell = [round(best7_mid.cells[field.at], 2) for field in data.cols.all]
+        best5_cell = [round(best5_mid.cells[field.at], 2) for field in data.cols.all]
 
         print("")
-        x_field = [x_field.txt for x_field in d.cols.x]
-        print("              {0}".format(x_field))
-        print("[A(0)] Mid row = {0}".format(a_best_row_cells))
-        print("[B(1)] Mid row = {0}".format(b_best_row_cells))
+        field_name = [field.txt for field in data.cols.all]
+        print("           {0}".format(field_name))
+        print("Best Row (9) = {0}".format(best9_cell))
+        print("d2h = {0}\n".format(best9_d2h))
+        print("Best Row (7) = {0}".format(best7_cell))
+        print("d2h = {0}\n".format(best7_d2h))
+        print("Best Row (5) = {0}".format(best5_cell))
+        print("d2h = {0}\n".format(best5_d2h))
 
-        a_d2h = a_data.rows[0].d2h(d)
-        b_d2h = b_data.rows[0].d2h(d)
+    def test_rgaussian_mixtures(self):
+        self.reset_to_default_seed()
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+
+        print("Data file: {0}".format(self.the.file))
+
+        data = DATA(self.the, self.the.file)
+
+        # 7 is the maximum we can choose for no of evaluations since after 8 the number of elements in the best row is less than 2 which will raise an error since Gaussian mizxture requires at least 2 samples to fit the data.
+        best9, best9_d2h, evals = data.recursive_gaussian_mixtures(7)
+        best7, best7_d2h, evals = data.recursive_gaussian_mixtures(5)
+        best5, best5_d2h, evals = data.recursive_gaussian_mixtures(3)
+
+        best9_mid = best9.mid()
+        best7_mid = best7.mid()
+        best5_mid = best5.mid()
+
+        best9_cell = [round(best9_mid.cells[field.at], 2) for field in data.cols.all]
+        best7_cell = [round(best7_mid.cells[field.at], 2) for field in data.cols.all]
+        best5_cell = [round(best5_mid.cells[field.at], 2) for field in data.cols.all]
 
         print("")
-        print("[A(0)] Mid d2h = {0}".format(a_d2h))
-        print("[B(1)] Mid d2h = {0}".format(b_d2h))
-        
-        print(a_data.rows[0].cells)
-        print("Highest Throughput+:", a_data.cols.all[3].hi)
-        print("Lowest Throughput+:", a_data.cols.all[3].lo)
-        
-        print("Highest Latency-:", a_data.cols.all[4].hi)
-        print("Lowest Latency-:", a_data.cols.all[4].lo)
-
-        if a_d2h <= b_d2h:
-            best = a_data
-            rest = b_data
-        else:
-            best = b_data
-            rest = a_data
-
+        field_name = [field.txt for field in data.cols.all]
+        print("           {0}".format(field_name))
+        print("Best Row (9) = {0}".format(best9_cell))
+        print("d2h = {0}\n".format(best9_d2h))
+        print("Best Row (7) = {0}".format(best7_cell))
+        print("d2h = {0}\n".format(best7_d2h))
+        print("Best Row (5) = {0}".format(best5_cell))
+        print("d2h = {0}\n".format(best5_d2h))
 
     def find_best_n_neighbors_for_sc(self):
         # Used to find to best parameter for spectral_clustering
@@ -1373,6 +1395,144 @@ class Tests():
                     # Unsupported type
                     continue
 
+            self.the.seed += 1
+
+        slurp_list = []
+        for key, item in stat_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
+
+    def test_new_rrp(self):
+        self.reset_to_default_seed()
+        smo_repeat_time = 20
+        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+        #self.the.file = "../data/SS-B.csv"
+        # self.the.file = "../data/SS-C.csv"
+
+        d = DATA(self.the, self.the.file)
+
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(smo_repeat_time))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        # Best
+        sorted_d = sorted(d.rows, key=lambda a: a.d2h(d))
+        print("best : {0}".format(round(sorted_d[0].d2h(d), 2)))
+
+        # Tiny
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+        tiny_value = 0.35 * standard_deviation
+        print("tiny : {0}".format(round(tiny_value, 2)))
+
+        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
+                    "rrp4_projection", "rrp5_projection", "rrp6_projection", "rrp7_projection", "rrp8_projection", "rrp9_projection",
+                    "rrp2_kmeans", "rrp3_kmeans", "rrp4_kmeans", "rrp5_kmeans", "rrp6_kmeans", "rrp7_kmeans",
+                    "rrp2_sc", "rrp3_sc", "rrp4_sc", "rrp5_sc", "rrp6_sc", "rrp7_sc",
+                    "rrp2_gm", "rrp3_gm", "rrp4_gm", "rrp5_gm", "rrp6_gm", "rrp7_gm",
+                    "rand9", "rand15", "rand25", "rand35", "rand358"]
+        # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
+        test_case_n = len(test_case)
+
+        test_case_output = ' '.join(f"#{item}" for item in test_case)
+        print(test_case_output)
+        print("#report{0}".format(test_case_n))
+
+        stat_dict = {}
+
+        # Do base first
+        d = DATA(self.the, self.the.file)
+        d2h_list = [round(row.d2h(d), 2) for row in d.rows]
+        stat_dict["base"] = d2h_list
+
+        for _ in range(20):
+            d = DATA(self.the, self.the.file)
+            for test_type in test_case:
+                if test_type.startswith("base"):
+                    continue
+                elif test_type.startswith("bonr"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some)
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type[0] == 'b' and test_type[1:].isdigit():
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate(budget0, budget, some, acquisition_type="b")
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rrp"):
+                    d2h_list = stat_dict.get(test_type, [])
+                    match = re.search(r'rrp(\d+)_(\w+)', test_type)
+                    if not match:
+                        continue
+
+                    tree_depth = int(match.group(1))
+                    clustering_algo = match.group(2)
+                    clustering_parameter_dict = {}
+                    print(clustering_algo,"  " ,tree_depth)
+                    best = d
+
+                    if clustering_algo == "projection":
+                        pass
+                        # best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
+                    elif clustering_algo == "kmeans":
+                        best, d2h, evals = d.recursive_kmeans(tree_depth)
+                    elif clustering_algo == "sc":
+                        best, d2h, evals = d.recursive_spectral_clustering(tree_depth)
+                    elif clustering_algo == "gm":
+                        best, d2h, evals = d.recursive_gaussian_mixtures(tree_depth)
+                    else:
+                        raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
+                    d2h_list.append(best.mid().d2h(d))
+                    stat_dict[test_type] = d2h_list
+                elif test_type.startswith("rand"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    d = DATA(self.the, self.the.file)
+                    best_d2h_in_random_rows = self._get_best_d2h_with_rand(d, budget)
+                    d2h_list.append(round(best_d2h_in_random_rows, 2))
+                    stat_dict[test_type] = d2h_list
+                else:
+                    # Unsupported type
+                    continue
             self.the.seed += 1
 
         slurp_list = []

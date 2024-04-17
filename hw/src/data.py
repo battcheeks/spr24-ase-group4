@@ -415,6 +415,162 @@ class DATA:
         else:
             print("[{0}] [stop = {1}] Result is done, seed = {2}".format(cluserting_algo_type, stop, self.the.seed))
             return self.clone(rows), self.clone(rest), evals
+    
+    def recursive_kmeans(self, arg_eval, data=None, evals=1):
+        data = data or self
+        # stop = stop or 2 * len(data.rows) ** 0.5
+        best = data
+
+        if len(data.rows) < 2:
+            print(data.rows)
+            print(evals)
+            raise ValueError("Insufficient data. At least 2 samples are required.")
+
+        if evals <= arg_eval:
+            x_data_rows = []
+            for row in data.rows:
+                new_x_data = []
+                for x_field in data.cols.x:
+                    new_x_data.append(row.cells[x_field.at])
+                x_data_rows.append(new_x_data)
+
+            data_array = np.array(x_data_rows)
+
+            kmeans = KMeans(n_clusters=2, random_state=self.the.seed, n_init=1)
+
+            kmeans.fit(data_array)
+
+            labels = kmeans.labels_
+
+            a = [data.cols.names]
+            b = [data.cols.names]
+
+            for index, row in enumerate(data.rows):
+                if labels[index] == 0:
+                    a.append(row)
+                else:
+                    b.append(row)
+
+            a_data = DATA(self.the, a)
+            b_data = DATA(self.the, b)
+
+            a_d2h = a_data.mid().d2h(self)
+            b_d2h = b_data.mid().d2h(self)
+            
+            if a_d2h <= b_d2h:
+                best = a_data
+                rest = b_data
+            else:
+                best = b_data
+                rest = a_data
+            
+            return self.recursive_kmeans(arg_eval, best, evals + 1)
+        else:
+            return self.clone(data.rows), best.mid().d2h(self), evals
+        
+    def recursive_spectral_clustering(self, arg_eval, data=None, affinity='nearest_neighbors', n_neighbors=50, evals=1):
+        data = data or self
+        best = data
+
+        if len(data.rows) < 2:
+            print(data.rows)
+            print(evals)
+            raise ValueError("Insufficient data. At least 2 samples are required.")
+
+        if evals <= arg_eval:
+            x_data_rows = []
+            for row in data.rows:
+                new_x_data = []
+                for x_field in data.cols.x:
+                    new_x_data.append(row.cells[x_field.at])
+                x_data_rows.append(new_x_data)
+
+            data_array = np.array(x_data_rows)
+
+            if len(data_array) < n_neighbors:
+                n_neighbors = int(len(data_array) ** 0.5)
+
+            model = SpectralClustering(n_clusters=2, affinity=affinity, n_neighbors=n_neighbors, random_state=self.the.seed)
+
+            labels = model.fit_predict(data_array)
+
+            a = [self.cols.names]
+            b = [self.cols.names]
+
+            for index, row in enumerate(data.rows):
+                if labels[index] == 0:
+                    a.append(row)
+                else:
+                    b.append(row)
+
+            a_data = DATA(self.the, a)
+            b_data = DATA(self.the, b)
+
+            a_d2h = a_data.mid().d2h(self)
+            b_d2h = b_data.mid().d2h(self)
+
+            if a_d2h <= b_d2h:
+                best = a_data
+                rest = b_data
+            else:
+                best = b_data
+                rest = a_data
+            
+            return self.recursive_spectral_clustering(arg_eval, best, affinity, n_neighbors, evals + 1)
+        else:
+            return self.clone(data.rows), best.mid().d2h(self), evals
+        
+
+    def recursive_gaussian_mixtures(self, arg_eval, data=None, covariance_type='full', max_iter=100, evals=1):
+        data = data or self
+        best = data
+
+        if len(data.rows) < 2:
+            print(data.rows)
+            print(evals)
+            raise ValueError("Insufficient data. At least 2 samples are required.")
+
+        if evals <= arg_eval:
+            x_data_rows = []
+            for row in data.rows:
+                new_x_data = []
+                for x_field in data.cols.x:
+                    new_x_data.append(row.cells[x_field.at])
+                x_data_rows.append(new_x_data)
+
+            data_array = np.array(x_data_rows)
+
+            model = GaussianMixture(n_components=2, covariance_type=covariance_type, max_iter=max_iter, random_state=self.the.seed)
+
+            model.fit(data_array)
+
+            labels = model.predict(data_array)
+
+            a = [self.cols.names]
+            b = [self.cols.names]
+
+            for index, row in enumerate(data.rows):
+                if labels[index] == 0:
+                    a.append(row)
+                else:
+                    b.append(row)
+
+            a_data = DATA(self.the, a)
+            b_data = DATA(self.the, b)
+
+            a_d2h = a_data.mid().d2h(self)
+            b_d2h = b_data.mid().d2h(self)
+
+            if a_d2h <= b_d2h:
+                best = a_data
+                rest = b_data
+            else:
+                best = b_data
+                rest = a_data
+
+            return self.recursive_gaussian_mixtures(arg_eval, best, covariance_type, max_iter, evals + 1)
+        else:
+            return self.clone(data.rows), best.mid().d2h(self), evals
 
 #data = DATA(src='../data/auto93.csv')
 

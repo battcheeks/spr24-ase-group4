@@ -107,8 +107,12 @@ def main():
         test.test_kmeans()
     elif args.task == "km_opt":
         test.find_best_kmeans_parameter()
-    elif args.task == "kmeans2":
-        test.test_kmeans2()
+    elif args.task == "rkmeans":
+        test.test_rkmeans()
+    elif args.task == "rsc":
+        test.test_rspectral_clustering()
+    elif args.task == "rgm":
+        test.test_rgaussian_mixtures()
     elif args.task == "sc":
         test.test_spectral_clustering()
     elif args.task == "sc_opt":
@@ -119,6 +123,8 @@ def main():
         test.find_best_parameter_for_gaussian_mixtures()
     elif args.task == "rrp":
         test.test_generalize_rrp()
+    elif args.task == "new_rrp":
+        test.test_new_rrp()
     elif args.task == "all":
         test.run_all_tests()
     else:
