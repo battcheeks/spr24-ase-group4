@@ -1506,8 +1506,7 @@ class Tests():
                     best = d
 
                     if clustering_algo == "projection":
-                        pass
-                        # best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
+                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
                     elif clustering_algo == "kmeans":
                         best, d2h, evals = d.recursive_kmeans(tree_depth)
                     elif clustering_algo == "sc":
