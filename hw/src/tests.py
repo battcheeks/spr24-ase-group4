@@ -1502,7 +1502,6 @@ class Tests():
                     tree_depth = int(match.group(1))
                     clustering_algo = match.group(2)
                     clustering_parameter_dict = {}
-                    print(clustering_algo,"  " ,tree_depth)
                     best = d
 
                     if clustering_algo == "projection":
