@@ -181,7 +181,7 @@ class DATA:
         a = [self.cols.names]
         b = [self.cols.names]
 
-        for index, row in enumerate(self.rows):
+        for index, row in enumerate(rows):
             if labels[index] == 0:
                 a.append(row)
             else:
@@ -218,14 +218,17 @@ class DATA:
 
         data_array = np.array(x_data_rows)
 
-        model = SpectralClustering(n_clusters=2, affinity=affinity, n_neighbors=n_neighbors)
+        if len(data_array) < n_neighbors:
+            n_neighbors = int(len(data_array) ** 0.5)
+
+        model = SpectralClustering(n_clusters=2, affinity=affinity, n_neighbors=n_neighbors, random_state=self.the.seed)
 
         labels = model.fit_predict(data_array)
 
         a = [self.cols.names]
         b = [self.cols.names]
 
-        for index, row in enumerate(self.rows):
+        for index, row in enumerate(rows):
             if labels[index] == 0:
                 a.append(row)
             else:
@@ -271,7 +274,7 @@ class DATA:
         a = [self.cols.names]
         b = [self.cols.names]
 
-        for index, row in enumerate(self.rows):
+        for index, row in enumerate(rows):
             if labels[index] == 0:
                 a.append(row)
             else:
@@ -305,13 +308,22 @@ class DATA:
         right = left.neighbors(self, rows)[far]
         if sortp and right.d2h(self) < left.d2h(self):
             left, right = right, left
-        return left, right, left.dist(right, self), evals
+        return left, right, left.dist(right, self) + 1E-300, evals
 
 
     def half(self, rows, sortp=False, before=None):
         def dist(r1, r2): return r1.dist(r2, self)
         def proj(row)  : return (dist(row,left)**2 + C**2 - dist(row,right)**2)/(2*C)
         left, right, C, _ = self.farapart(random.choices(rows, k=min(self.the.Half, len(rows))), sortp=sortp, before=before)
+        if C == 0:
+            print("C = 0!!")
+
+            for row in rows:
+                print(row.cells)
+
+            print("")
+            print(left.cells)
+            print(right.cells)
 
         lefts,rights = [],[]
 
@@ -351,12 +363,19 @@ class DATA:
 
 
     def rrp(self, rows=None, stop=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
         rows = rows or self.rows
         stop = stop or 2 * len(rows) ** 0.5
         rest = rest or []
         if len(rows) > stop:
             if cluserting_algo_type == "projection":
-                lefts, rights, left, right  = self.half(rows, True, before)
+                try:
+                    lefts, rights, left, right  = self.half(rows, True, before)
+                except ZeroDivisionError as e:
+                    print("row size = {0}".format(len(rows)))
+                    print("stop = {0}".format(stop))
+                    raise e
             elif cluserting_algo_type == "kmeans":
                 init = clustering_parameter_dict.get("init")
                 max_iter = clustering_parameter_dict.get("max_iter")
@@ -392,8 +411,9 @@ class DATA:
             else:
                 raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(cluserting_algo_type))
 
-            return self.branch(lefts, stop, rest+rights, evals+1, left)
+            return self.rrp(lefts, stop, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
         else:
+            print("[{0}] [stop = {1}] Result is done, seed = {2}".format(cluserting_algo_type, stop, self.the.seed))
             return self.clone(rows), self.clone(rest), evals
 
 #data = DATA(src='../data/auto93.csv')

@@ -1236,7 +1236,10 @@ class Tests():
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         smo_repeat_time = 20
-        self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/auto93.csv"
+        #self.the.file = "../data/SS-A.csv"
+        #self.the.file = "../data/SS-B.csv"
+        self.the.file = "../data/SS-C.csv"
 
         d = DATA(self.the, self.the.file)
 
@@ -1281,6 +1284,7 @@ class Tests():
         stat_dict["base"] = d2h_list
 
         for _ in range(20):
+            d = DATA(self.the, self.the.file)
             for test_type in test_case:
                 if test_type.startswith("base"):
                     continue
@@ -1368,6 +1372,8 @@ class Tests():
                 else:
                     # Unsupported type
                     continue
+
+            self.the.seed += 1
 
         slurp_list = []
         for key, item in stat_dict.items():
