@@ -1258,18 +1258,18 @@ class Tests():
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         smo_repeat_time = 20
-        #self.the.file = "../data/auto93.csv"
-        # self.the.file = "../data/SS-A.csv"
-        # self.the.file = "../data/SS-B.csv"
-        # self.the.file = "../data/SS-C.csv"
+        #self.the.file = "../data/auto93.csv"  # 398 rows
+        # self.the.file = "../data/SS-A.csv"  # 1344 rows
+        # self.the.file = "../data/SS-B.csv"  #  207 rows
+        # self.the.file = "../data/SS-C.csv"  #  1513 rows
         # self.the.file = "../data/SS-D.csv"
         # self.the.file = "../data/SS-E.csv"
         # self.the.file = "../data/SS-F.csv"
         # self.the.file = "../data/SS-G.csv"
         # self.the.file = "../data/SS-H.csv"
         # self.the.file = "../data/SS-I.csv"
-        # self.the.file = "../data/SS-J.csv"
-        self.the.file = "../data/SS-K.csv"
+        # self.the.file = "../data/SS-J.csv"  #  3841 rows
+        self.the.file = "../data/SS-K.csv"  #  2881 rows
         # self.the.file = "../data/SS-L.csv"
         # self.the.file = "../data/SS-M.csv"
         # self.the.file = "../data/SS-N.csv"
@@ -1278,7 +1278,7 @@ class Tests():
 
         print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
         print("file : {0}".format(self.the.file))
-        print("repeats : {0}".format(smo_repeat_time))
+        print("repeats : {0}".format(REPEAT_TIME))
         print("seed : {0}".format(self.the.seed))
         print("rows : {0}".format(len(d.rows)))
         print("cols : {0}".format(len(d.cols.names.cells)))
@@ -1296,7 +1296,10 @@ class Tests():
         tiny_value = 0.35 * standard_deviation
         print("tiny : {0}".format(round(tiny_value, 2)))
 
-        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45","b/r9", "b/r15", "b/r25",         "b/r35", "b/r45","rrp_projection", "rrp_kmeans", "rrp_sc", "rrp_gm","rand9", "rand15", "rand25", "rand35", "rand358"]
+        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
+                     "b/r9", "b/r15", "b/r25", "b/r35", "b/r45",
+                     "rrp_projection", "rrp_kmeans", "rrp_sc", "rrp_gm","rand9", "rand15", "rand25", "rand35", "rand358"]
+
         # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
         test_case_n = len(test_case)
 
@@ -1311,7 +1314,9 @@ class Tests():
         d2h_list = [round(row.d2h(d), 2) for row in d.rows]
         stat_dict["base"] = d2h_list
 
-        for _ in range(20):
+        for i in range(REPEAT_TIME):
+            self.reset_to_default_seed()
+            print("\n[Itertation {0}]".format(i))
             d = DATA(self.the, self.the.file)
             for test_type in test_case:
                 if test_type.startswith("base"):
@@ -1385,17 +1390,14 @@ class Tests():
                     elif clustering_algo == "kmeans":
                         clustering_parameter_dict["init"] = "k-means++"
                         clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 300
-
                         best, rest, evals = d.rrp(cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "sc":
                         clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
                         clustering_parameter_dict["n_neighbors"] = 50  # sklearn's default value is 10
-
                         best, rest, evals = d.rrp(cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "gm":
                         clustering_parameter_dict["covariance_type"] = "full"  # sklearn's default value is "full"
                         clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 100
-
                         best, rest, evals = d.rrp(cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
                     else:
                         raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
@@ -1424,6 +1426,14 @@ class Tests():
         for key, item in stat_dict.items():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
+
+
+        for key, item in stat_dict.items():
+            if key == "base":
+                continue
+            value_list = [round(value, 2) for value in item]
+            print("[{0}]: {1}".format(key, value_list))
+            slurp_list.append(stats.SAMPLE(item, key))
 
     def test_new_rrp(self):
         self.reset_to_default_seed()
