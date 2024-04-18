@@ -118,6 +118,28 @@ class DATA:
             lite.append(dark.pop(todo))
         return stats, bests
     
+    def gate2(self, budget0, budget, some, clustering_method=None):
+        stats = []
+        bests = []
+        rows = self.util.shuffle(self.rows)
+        # print(self.rows)
+        lite = rows[:budget0]
+        dark = rows[budget0:]
+        for i in range(budget):
+
+            if not clustering_method:
+                # Do SMO by default
+                best, rest = self.bestRest(lite, len(lite)**some)
+            elif clustering_method == "kmeans":
+                pass
+            
+            todo, selected = self.split_by_b_over_r(best, rest, lite, dark)
+
+            stats.append(selected.mid())
+            bests.append(best.rows[0])
+            lite.append(dark.pop(todo))
+        return stats, bests
+    
     def split(self, best, rest, lite_rows, dark_rows):
         selected = DATA(self.the, [self.cols.names])
         max_val = 1E30
@@ -173,7 +195,7 @@ class DATA:
 
         data_array = np.array(x_data_rows)
 
-        kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed)
+        kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed, n_init=1)
         kmeans.fit(data_array)
 
         labels = kmeans.labels_
@@ -365,8 +387,9 @@ class DATA:
     def rrp(self, rows=None, stop=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
         import warnings
         warnings.filterwarnings("ignore", category=UserWarning)
+        random.seed(self.the.seed)
         rows = rows or self.rows
-        stop = stop or 2 * len(rows) ** 0.5
+        stop = stop or len(rows) ** 0.5
         rest = rest or []
         if len(rows) > stop:
             if cluserting_algo_type == "projection":
@@ -417,16 +440,14 @@ class DATA:
             return self.clone(rows), self.clone(rest), evals
     
     def recursive_kmeans(self, arg_eval, data=None, evals=1):
+        random.seed(self.the.seed)
         data = data or self
         # stop = stop or 2 * len(data.rows) ** 0.5
         best = data
 
-        if len(data.rows) < 2:
-            print(data.rows)
-            print(evals)
-            raise ValueError("Insufficient data. At least 2 samples are required.")
-
         if evals <= arg_eval:
+            if len(data.rows) < 2:
+                raise ValueError("Rows : {0}\n".format(data.rows), "Eval : {0}".format(evals))
             x_data_rows = []
             for row in data.rows:
                 new_x_data = []
@@ -469,15 +490,14 @@ class DATA:
             return self.clone(data.rows), best.mid().d2h(self), evals
         
     def recursive_spectral_clustering(self, arg_eval, data=None, affinity='nearest_neighbors', n_neighbors=50, evals=1):
+        random.seed(self.the.seed)
         data = data or self
         best = data
 
-        if len(data.rows) < 2:
-            print(data.rows)
-            print(evals)
-            raise ValueError("Insufficient data. At least 2 samples are required.")
-
         if evals <= arg_eval:
+            if len(data.rows) < 2:
+                raise ValueError("Rows : {0}\n".format(data.rows), "Eval : {0}".format(evals))
+
             x_data_rows = []
             for row in data.rows:
                 new_x_data = []
@@ -522,15 +542,13 @@ class DATA:
         
 
     def recursive_gaussian_mixtures(self, arg_eval, data=None, covariance_type='full', max_iter=100, evals=1):
+        random.seed(self.the.seed)
         data = data or self
         best = data
 
-        if len(data.rows) < 2:
-            print(data.rows)
-            print(evals)
-            raise ValueError("Insufficient data. At least 2 samples are required.")
-
         if evals <= arg_eval:
+            if len(data.rows) < 2:
+                raise ValueError("Rows : {0}\n".format(data.rows), "Eval : {0}".format(evals))
             x_data_rows = []
             for row in data.rows:
                 new_x_data = []

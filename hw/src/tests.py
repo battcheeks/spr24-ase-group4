@@ -1260,8 +1260,8 @@ class Tests():
         smo_repeat_time = 20
         #self.the.file = "../data/auto93.csv"
         #self.the.file = "../data/SS-A.csv"
-        #self.the.file = "../data/SS-B.csv"
-        self.the.file = "../data/SS-C.csv"
+        self.the.file = "../data/SS-B.csv"
+        # self.the.file = "../data/SS-C.csv"
 
         d = DATA(self.the, self.the.file)
 
@@ -1285,12 +1285,7 @@ class Tests():
         tiny_value = 0.35 * standard_deviation
         print("tiny : {0}".format(round(tiny_value, 2)))
 
-        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
-                    "rrp4_projection", "rrp5_projection", "rrp6_projection", "rrp7_projection", "rrp8_projection", "rrp9_projection",
-                    "rrp4_kmeans", "rrp5_kmeans", "rrp6_kmeans", "rrp7_kmeans", "rrp8_kmeans", "rrp9_kmeans",
-                    "rrp4_sc", "rrp5_sc", "rrp6_sc", "rrp7_sc", "rrp8_sc", "rrp9_sc",
-                    "rrp4_gm", "rrp5_gm", "rrp6_gm", "rrp7_gm", "rrp8_gm", "rrp9_gm",
-                    "rand9", "rand15", "rand25", "rand35", "rand358"]
+        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45","b/r9", "b/r15", "b/r25",         "b/r35", "b/r45","rrp_projection", "rrp_kmeans", "rrp_sc", "rrp_gm","rand9", "rand15", "rand25", "rand35", "rand358"]
         # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
         test_case_n = len(test_case)
 
@@ -1328,6 +1323,24 @@ class Tests():
                     d2h_list.append(round(bests[0].d2h(d), 2))
 
                     stat_dict[test_type] = d2h_list
+                elif test_type.startswith("b/r"):
+                    match = re.search(r'\d+', test_type)
+                    if not match:
+                        continue
+                    total_budget = int(match.group())
+
+                    d2h_list = stat_dict.get(test_type, [])
+
+                    budget0 = 4
+                    budget = total_budget - budget0
+                    some = 0.5
+
+                    d = DATA(self.the, self.the.file)
+                    _, bests = d.gate2(budget0, budget, some)
+                    bests.sort(key=lambda a: a.d2h(d))
+                    d2h_list.append(round(bests[0].d2h(d), 2))
+
+                    stat_dict[test_type] = d2h_list
                 elif test_type[0] == 'b' and test_type[1:].isdigit():
                     match = re.search(r'\d+', test_type)
                     if not match:
@@ -1348,32 +1361,31 @@ class Tests():
                     stat_dict[test_type] = d2h_list
                 elif test_type.startswith("rrp"):
                     d2h_list = stat_dict.get(test_type, [])
-                    match = re.search(r'rrp(\d+)_(\w+)', test_type)
+                    match = re.search(r'rrp_(\w+)', test_type)
                     if not match:
                         continue
 
-                    tree_depth = int(match.group(1))
-                    clustering_algo = match.group(2)
+                    # tree_depth = int(match.group(1))
+                    clustering_algo = match.group(1)
                     clustering_parameter_dict = {}
 
                     if clustering_algo == "projection":
-                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
+                        best, rest, evals = d.rrp(cluserting_algo_type="projection")
                     elif clustering_algo == "kmeans":
+                        clustering_parameter_dict["init"] = "k-means++"
+                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 300
 
-                        clustering_parameter_dict["affinity"] = "k-means++"
-                        clustering_parameter_dict["max_iter"] = 100
-
-                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
+                        best, rest, evals = d.rrp(cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "sc":
-                        clustering_parameter_dict["init"] = "nearest_neighbors"
-                        clustering_parameter_dict["n_neighbors"] = 50
+                        clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
+                        clustering_parameter_dict["n_neighbors"] = 50  # sklearn's default value is 10
 
-                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
+                        best, rest, evals = d.rrp(cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "gm":
-                        clustering_parameter_dict["covariance_type"] = "full"
-                        clustering_parameter_dict["max_iter"] = 100
+                        clustering_parameter_dict["covariance_type"] = "full"  # sklearn's default value is "full"
+                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 100
 
-                        best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
+                        best, rest, evals = d.rrp(cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
                     else:
                         raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
 
@@ -1405,10 +1417,10 @@ class Tests():
     def test_new_rrp(self):
         self.reset_to_default_seed()
         smo_repeat_time = 20
-        self.the.file = "../data/auto93.csv"
+        # self.the.file = "../data/auto93.csv"
         #self.the.file = "../data/SS-A.csv"
         #self.the.file = "../data/SS-B.csv"
-        # self.the.file = "../data/SS-C.csv"
+        self.the.file = "../data/SS-C.csv"
 
         d = DATA(self.the, self.the.file)
 
@@ -1440,6 +1452,29 @@ class Tests():
                     "rand9", "rand15", "rand25", "rand35", "rand358"]
         # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
         test_case_n = len(test_case)
+
+        # kmean_depth = math.floor(math.log2(len(d.rows)))
+        # sc_depth = math.floor(math.log2(len(d.rows)))
+        # gm_depth = math.floor(math.log2(len(d.rows)))
+
+        # # Iterate over the array in reverse order
+        # for i in range(len(test_case)-1, -1, -1):
+        #     # If the string starts with 'rrp' and ends with '_kmeans', '_sc', or '_gm'
+        #     if re.match(r'rrp\d+_(kmeans)', test_case[i]):
+        #         # Replace the number with the current max_depth
+        #         test_case[i] = re.sub(r'rrp\d+', f'rrp{kmean_depth}', test_case[i])
+        #         # Decrease max_depth
+        #         kmean_depth -= 1
+        #     if re.match(r'rrp\d+_(sc)', test_case[i]):
+        #         # Replace the number with the current max_depth
+        #         test_case[i] = re.sub(r'rrp\d+', f'rrp{sc_depth}', test_case[i])
+        #         # Decrease max_depth
+        #         sc_depth -= 1
+        #     if re.match(r'rrp\d+_(gm)', test_case[i]):
+        #         # Replace the number with the current max_depth
+        #         test_case[i] = re.sub(r'rrp\d+', f'rrp{gm_depth}', test_case[i])
+        #         # Decrease max_depth
+        #         gm_depth -= 1
 
         test_case_output = ' '.join(f"#{item}" for item in test_case)
         print(test_case_output)
