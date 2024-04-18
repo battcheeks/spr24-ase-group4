@@ -1360,12 +1360,12 @@ class Tests():
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
                     elif clustering_algo == "kmeans":
 
-                        clustering_parameter_dict["affinity"] = "k-means++"
+                        clustering_parameter_dict["init"] = "k-means++"
                         clustering_parameter_dict["max_iter"] = 100
 
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "sc":
-                        clustering_parameter_dict["init"] = "nearest_neighbors"
+                        clustering_parameter_dict["affinity"] = "nearest_neighbors"
                         clustering_parameter_dict["n_neighbors"] = 50
 
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
