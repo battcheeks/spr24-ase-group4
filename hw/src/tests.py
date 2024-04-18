@@ -1359,19 +1359,18 @@ class Tests():
                     if clustering_algo == "projection":
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="projection")
                     elif clustering_algo == "kmeans":
-
                         clustering_parameter_dict["init"] = "k-means++"
-                        clustering_parameter_dict["max_iter"] = 100
+                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 300
 
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "sc":
-                        clustering_parameter_dict["affinity"] = "nearest_neighbors"
-                        clustering_parameter_dict["n_neighbors"] = 50
+                        clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
+                        clustering_parameter_dict["n_neighbors"] = 50  # sklearn's default value is 10
 
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "gm":
-                        clustering_parameter_dict["covariance_type"] = "full"
-                        clustering_parameter_dict["max_iter"] = 100
+                        clustering_parameter_dict["covariance_type"] = "full"  # sklearn's default value is "full"
+                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 100
 
                         best, rest, evals = d.rrp(stop=tree_depth, cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
                     else:
