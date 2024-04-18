@@ -1435,8 +1435,8 @@ class Tests():
         test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
                     "rrp4_projection", "rrp5_projection", "rrp6_projection", "rrp7_projection", "rrp8_projection", "rrp9_projection",
                     "rrp2_kmeans", "rrp3_kmeans", "rrp4_kmeans", "rrp5_kmeans", "rrp6_kmeans", "rrp7_kmeans",
-                    "rrp2_sc", "rrp3_sc", "rrp4_sc", "rrp5_sc", "rrp6_sc", "rrp7_sc",
-                    "rrp2_gm", "rrp3_gm", "rrp4_gm", "rrp5_gm", "rrp6_gm", "rrp7_gm",
+                    "rrp2_sc", "rrp3_sc", "rrp4_sc", "rrp5_sc", "rrp6_sc", "rrp9_sc",
+                    "rrp2_gm", "rrp3_gm", "rrp4_gm", "rrp5_gm", "rrp6_gm", "rrp9_gm",
                     "rand9", "rand15", "rand25", "rand35", "rand358"]
         # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
         test_case_n = len(test_case)
