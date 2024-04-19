@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\mylo.py", line 134, in <module>
+    main()
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\mylo.py", line 125, in main
+    test.test_generalize_rrp()
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\tests.py", line 1333, in test_generalize_rrp
+    _, bests = d.gate(budget0, budget, some)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\data.py", line 114, in gate
+    todo, selected = self.split(best, rest, lite, dark)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\data.py", line 150, in split
+    r = row.like(rest, len(lite_rows), 2)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\ROW.py", line 35, in like
+    return math.exp(1) ** out
+           ~~~~~~~~~~~~^^~~~~
+OverflowError: (34, 'Result too large')
