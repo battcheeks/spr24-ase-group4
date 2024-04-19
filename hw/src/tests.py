@@ -1259,9 +1259,20 @@ class Tests():
         self.reset_to_default_seed()
         smo_repeat_time = 20
         #self.the.file = "../data/auto93.csv"
-        #self.the.file = "../data/SS-A.csv"
-        self.the.file = "../data/SS-B.csv"
+        # self.the.file = "../data/SS-A.csv"
+        # self.the.file = "../data/SS-B.csv"
         # self.the.file = "../data/SS-C.csv"
+        # self.the.file = "../data/SS-D.csv"
+        # self.the.file = "../data/SS-E.csv"
+        # self.the.file = "../data/SS-F.csv"
+        # self.the.file = "../data/SS-G.csv"
+        # self.the.file = "../data/SS-H.csv"
+        # self.the.file = "../data/SS-I.csv"
+        # self.the.file = "../data/SS-J.csv"
+        self.the.file = "../data/SS-K.csv"
+        # self.the.file = "../data/SS-L.csv"
+        # self.the.file = "../data/SS-M.csv"
+        # self.the.file = "../data/SS-N.csv"
 
         d = DATA(self.the, self.the.file)
 
