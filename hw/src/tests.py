@@ -1435,11 +1435,15 @@ class Tests():
 
             self.the.seed += 1
 
+        print("\n--------------------------------------------------------------------------------\n")
         slurp_list = []
         for key, item in stat_dict.items():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
 
+        """
+        print("\n\n--------------------------------------------------------------------------------")
+        print("Raw statistics of {0} d2h value for each algorithm\n".format(REPEAT_TIME))
 
         for key, item in stat_dict.items():
             if key == "base":
@@ -1447,6 +1451,7 @@ class Tests():
             value_list = [round(value, 2) for value in item]
             print("[{0}]: {1}".format(key, value_list))
             slurp_list.append(stats.SAMPLE(item, key))
+        """
 
     def test_new_rrp(self):
         self.reset_to_default_seed()
