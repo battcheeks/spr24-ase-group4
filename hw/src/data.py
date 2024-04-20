@@ -402,7 +402,7 @@ class DATA:
         warnings.filterwarnings("ignore", category=UserWarning)
         random.seed(self.the.seed)
         rows = rows or self.rows
-        stop = stop or len(rows) ** 0.5
+        stop = stop or 2 * len(rows) ** 0.5
         rest = rest or []
         if len(rows) > stop:
             if cluserting_algo_type == "projection":

@@ -1259,7 +1259,7 @@ class Tests():
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         REPEAT_TIME = 20
-        self.the.file = "../data/auto93.csv"  # 398 rows
+        # self.the.file = "../data/auto93.csv"  # 398 rows
         # self.the.file = "../data/SS-A.csv"  #  1344 rows
         # self.the.file = "../data/SS-B.csv"  #  207 rows
         # self.the.file = "../data/SS-C.csv"  #  1513 rows
@@ -1268,7 +1268,7 @@ class Tests():
         # self.the.file = "../data/SS-F.csv"  #  197 rows
         # self.the.file = "../data/SS-G.csv"  #  197 rows
         # self.the.file = "../data/SS-H.csv"  #  260 rows
-        # self.the.file = "../data/SS-I.csv"  #  1081 rows
+        self.the.file = "../data/SS-I.csv"  #  1081 rows
         # self.the.file = "../data/SS-J.csv"  #  3841 rows
         # self.the.file = "../data/SS-K.csv"  #  2881 rows
         # self.the.file = "../data/SS-L.csv"  #  1024 rows
@@ -1310,6 +1310,7 @@ class Tests():
         print("#report{0}".format(test_case_n))
 
         stat_dict = {}
+        complete_time_dict = {}
 
         # Do base first
         d = DATA(self.the, self.the.file)
@@ -1324,6 +1325,7 @@ class Tests():
 
             for test_type in test_case:
                 start_time = time.time()
+                complete_time_list = complete_time_dict.get(test_type, [])
                 if test_type.startswith("base"):
                     continue
                 elif test_type.startswith("bonr"):
@@ -1431,27 +1433,29 @@ class Tests():
 
                 end_time = time.time()
                 total_time = end_time - start_time
+                complete_time_list.append(round(total_time, 4))
+                complete_time_dict[test_type] = complete_time_list
                 print("[{0}] Complete in {1:.3f} seconds\n".format(test_type, total_time))
 
             self.the.seed += 1
 
+        import os
         print("\n--------------------------------------------------------------------------------\n")
+        print("[{0}] Statistics for the centroid's d2h value in the best cluster of each algorithm\n".format(os.path.basename(self.the.file)))
+
         slurp_list = []
         for key, item in stat_dict.items():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
 
-        """
         print("\n\n--------------------------------------------------------------------------------")
-        print("Raw statistics of {0} d2h value for each algorithm\n".format(REPEAT_TIME))
+        print("[{0}] Statistics of the completion time for each algorithm (Unit: seconds)\n".format(os.path.basename(self.the.file)))
 
-        for key, item in stat_dict.items():
-            if key == "base":
-                continue
-            value_list = [round(value, 2) for value in item]
-            print("[{0}]: {1}".format(key, value_list))
+        slurp_list = []
+        for key, item in complete_time_dict.items():
             slurp_list.append(stats.SAMPLE(item, key))
-        """
+        eg0(slurp_list)
+
 
     def test_new_rrp(self):
         self.reset_to_default_seed()
