@@ -32,7 +32,7 @@ class ROW:
                 except ValueError:
                     return 0.0
 
-        return math.exp(1) ** out
+        return out
 
     """
     function ROW:d2h(data, d, n)

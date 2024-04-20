@@ -17,6 +17,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
+import time
 
 class Tests():
     def __init__(self, the) -> None:
@@ -1258,21 +1259,22 @@ class Tests():
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         REPEAT_TIME = 20
-        #self.the.file = "../data/auto93.csv"  # 398 rows
-        # self.the.file = "../data/SS-A.csv"  # 1344 rows
+        self.the.file = "../data/auto93.csv"  # 398 rows
+        # self.the.file = "../data/SS-A.csv"  #  1344 rows
         # self.the.file = "../data/SS-B.csv"  #  207 rows
         # self.the.file = "../data/SS-C.csv"  #  1513 rows
-        # self.the.file = "../data/SS-D.csv"
-        # self.the.file = "../data/SS-E.csv"
-        # self.the.file = "../data/SS-F.csv"
-        # self.the.file = "../data/SS-G.csv"
-        # self.the.file = "../data/SS-H.csv"
-        # self.the.file = "../data/SS-I.csv"
+        # self.the.file = "../data/SS-D.csv"  #  197 rows
+        # self.the.file = "../data/SS-E.csv"  #  757 rows
+        # self.the.file = "../data/SS-F.csv"  #  197 rows
+        # self.the.file = "../data/SS-G.csv"  #  197 rows
+        # self.the.file = "../data/SS-H.csv"  #  260 rows
+        # self.the.file = "../data/SS-I.csv"  #  1081 rows
         # self.the.file = "../data/SS-J.csv"  #  3841 rows
-        self.the.file = "../data/SS-K.csv"  #  2881 rows
-        # self.the.file = "../data/SS-L.csv"
-        # self.the.file = "../data/SS-M.csv"
-        # self.the.file = "../data/SS-N.csv"
+        # self.the.file = "../data/SS-K.csv"  #  2881 rows
+        # self.the.file = "../data/SS-L.csv"  #  1024 rows
+        # self.the.file = "../data/SS-M.csv"  #  239361 rows
+        # self.the.file = "../data/SS-N.csv"  #  53663 rows
+        # self.the.file = "../data/SS-O.csv"  #  65425 rows
 
         d = DATA(self.the, self.the.file)
 
@@ -1317,8 +1319,11 @@ class Tests():
         for i in range(REPEAT_TIME):
             self.reset_to_default_seed()
             print("\n[Itertation {0}]".format(i))
+
             d = DATA(self.the, self.the.file)
+
             for test_type in test_case:
+                start_time = time.time()
                 if test_type.startswith("base"):
                     continue
                 elif test_type.startswith("bonr"):
@@ -1384,23 +1389,27 @@ class Tests():
                     # tree_depth = int(match.group(1))
                     clustering_algo = match.group(1)
                     clustering_parameter_dict = {}
+                    cluserting_algo_type = None
 
                     if clustering_algo == "projection":
-                        best, rest, evals = d.rrp(cluserting_algo_type="projection")
+                        cluserting_algo_type = "projection"
                     elif clustering_algo == "kmeans":
+                        cluserting_algo_type = "kmeans"
                         clustering_parameter_dict["init"] = "k-means++"
                         clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 300
-                        best, rest, evals = d.rrp(cluserting_algo_type="kmeans", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "sc":
+                        cluserting_algo_type = "spectral_clustering"
                         clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
                         clustering_parameter_dict["n_neighbors"] = 50  # sklearn's default value is 10
-                        best, rest, evals = d.rrp(cluserting_algo_type="spectral_clustering", clustering_parameter_dict=clustering_parameter_dict)
                     elif clustering_algo == "gm":
+                        cluserting_algo_type = "gaussian_mixtures"
                         clustering_parameter_dict["covariance_type"] = "full"  # sklearn's default value is "full"
                         clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 100
-                        best, rest, evals = d.rrp(cluserting_algo_type="gaussian_mixtures", clustering_parameter_dict=clustering_parameter_dict)
                     else:
                         raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
+
+                    best, rest, evals  = d.rrp(cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
+
 
                     d2h_list.append(best.mid().d2h(d))
                     stat_dict[test_type] = d2h_list
@@ -1419,6 +1428,10 @@ class Tests():
                 else:
                     # Unsupported type
                     continue
+
+                end_time = time.time()
+                total_time = end_time - start_time
+                print("[{0}] Complete in {1:.3f} seconds\n".format(test_type, total_time))
 
             self.the.seed += 1
 
