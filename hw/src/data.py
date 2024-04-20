@@ -449,7 +449,7 @@ class DATA:
 
             return self.rrp(lefts, stop, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
         else:
-            print("[{0}] [stop = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, math.ceil(stop), self.the.seed, len(rows)))
+            #print("[{0}] [stop = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, math.ceil(stop), self.the.seed, len(rows)))
             return self.clone(rows), self.clone(rest), evals
 
 

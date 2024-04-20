@@ -1435,7 +1435,7 @@ class Tests():
                 total_time = end_time - start_time
                 complete_time_list.append(round(total_time, 4))
                 complete_time_dict[test_type] = complete_time_list
-                print("[{0}] Complete in {1:.3f} seconds\n".format(test_type, total_time))
+                #print("[{0}] Complete in {1:.3f} seconds\n".format(test_type, total_time))
 
             self.the.seed += 1
 
