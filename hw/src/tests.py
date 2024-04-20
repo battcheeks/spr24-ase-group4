@@ -1257,7 +1257,7 @@ class Tests():
 
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
-        smo_repeat_time = 20
+        REPEAT_TIME = 20
         #self.the.file = "../data/auto93.csv"  # 398 rows
         # self.the.file = "../data/SS-A.csv"  # 1344 rows
         # self.the.file = "../data/SS-B.csv"  #  207 rows
