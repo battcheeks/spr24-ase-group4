@@ -1,18 +1,24 @@
-Traceback (most recent call last):
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\mylo.py", line 134, in <module>
-    main()
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\mylo.py", line 125, in main
-    test.test_generalize_rrp()
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\tests.py", line 1333, in test_generalize_rrp
-    _, bests = d.gate(budget0, budget, some)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\data.py", line 114, in gate
-    todo, selected = self.split(best, rest, lite, dark)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\data.py", line 150, in split
-    r = row.like(rest, len(lite_rows), 2)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Drive\MS\NCSU classes\CSC 591 ASE\spr24-ase-group5\hw\src\ROW.py", line 35, in like
-    return math.exp(1) ** out
-           ~~~~~~~~~~~~^^~~~~
-OverflowError: (34, 'Result too large')
+#
+ 0,              rand358,  0.16,  0.00, *                   |                   ,  0.16,  0.88
+ 0,                b/r35,  0.18,  0.03, -*                  |                   ,  0.16,  0.88
+ 0,                b/r45,  0.18,  0.02,  *                  |                   ,  0.16,  0.88
+ 0,               rand35,  0.18,  0.02,  *                  |                   ,  0.16,  0.88
+ 0,               rrp_sc,  0.18,  0.09,  *----              |                   ,  0.16,  0.88
+ 0,               bonr45,  0.19,  0.03, -*                  |                   ,  0.16,  0.88
+ 0,                b/r25,  0.19,  0.04, -*                  |                   ,  0.16,  0.88
+ 0,               rand25,  0.19,  0.04, -*                  |                   ,  0.16,  0.88
+ 0,               bonr25,  0.20,  0.02,  -*                 |                   ,  0.16,  0.88
+ 0,               bonr35,  0.20,  0.02,  -*                 |                   ,  0.16,  0.88
+#
+ 1,                bonr9,  0.21,  0.24,   *------------     |                   ,  0.16,  0.88
+ 1,               rand15,  0.21,  0.22,  -*----------       |                   ,  0.16,  0.88
+ 1,               bonr15,  0.22,  0.20,   -*---------       |                   ,  0.16,  0.88
+#
+ 2,           rrp_kmeans,  0.34,  0.10,        ---*--       |                   ,  0.16,  0.88
+ 2,               rrp_gm,  0.37,  0.15,       -----*--      |                   ,  0.16,  0.88
+ 2,       rrp_projection,  0.38,  0.18,        -----*----   |                   ,  0.16,  0.88
+ 2,                rand9,  0.39,  0.26,  -----------*--     |                   ,  0.16,  0.88
+ 2,                 b/r9,  0.40,  0.28,   -----------*----  |                   ,  0.16,  0.88
+ 2,                b/r15,  0.41,  0.25,  ------------*-     |                   ,  0.16,  0.88
+#
+ 3,                 base,  0.69,  0.20,                     |--------*--        ,  0.16,  0.88
