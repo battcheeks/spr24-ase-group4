@@ -15,9 +15,13 @@ from Utility import Utility
 from datetime import datetime
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
+from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import time
+import numpy as np
 
 class Tests():
     def __init__(self, the) -> None:
@@ -771,8 +775,6 @@ class Tests():
                     d2h_list.append(best.mid().d2h(d))
                     stat_dict[test_type] = d2h_list
                 elif test_type.startswith("kmeans"):
-                    import numpy as np
-
                     x_value_list = None
                 elif test_type.startswith("rand"):
                     match = re.search(r'\d+', test_type)
@@ -795,54 +797,6 @@ class Tests():
             slurp_list.append(stats.SAMPLE(item, key))
         eg0(slurp_list)
 
-    def find_best_kmeans_parameter(self):
-        # Used to find to best parameter for kmeans
-
-        self.reset_to_default_seed()
-        self.the.file = "../data/auto93.csv"
-        self.the.file = "../data/SS-A.csv"
-        self.the.file = "../data/SS-B.csv"
-        self.the.file = "../data/SS-C.csv"
-        self.the.file = "../data/SS-D.csv"
-
-        print("Data file: {0}".format(self.the.file))
-
-        d = DATA(self.the, self.the.file)
-
-        print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
-
-        x_data_rows = []
-        for row in d.rows:
-            new_x_data = []
-            for x_field in d.cols.x:
-                new_x_data.append(row.cells[x_field.at])
-            x_data_rows.append(new_x_data)
-
-        data_array = np.array(x_data_rows)
-
-        init_methods = ['k-means++', 'random']
-        max_iter_options = [100, 300, 500, 1000]
-        best_score = -1
-        best_params = {}
-
-        for init in init_methods:
-            for max_iter in max_iter_options:
-                kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed)
-                labels = kmeans.fit_predict(data_array)
-                score = silhouette_score(data_array, labels)
-                print(f"Init method: {init}, max_iter: {max_iter}, Silhouette Score: {score}")
-
-                if score > best_score:
-                    best_score = score
-                    best_params = {'init': init, 'max_iter': max_iter}
-
-        print("\n[Best configuration]")
-        print("Best Init method:", best_params['init'])
-        print("Best max_iter:", best_params['max_iter'])
-
-
     def test_kmeans(self):
         DEFAULT_BEST_MAX_ITER = 100
         self.reset_to_default_seed()
@@ -855,9 +809,6 @@ class Tests():
         d = DATA(self.the, self.the.file)
 
         print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
-
         x_data_rows = []
         for row in d.rows:
             new_x_data = []
@@ -1010,25 +961,12 @@ class Tests():
         print("Best Row (5) = {0}".format(best5_cell))
         print("d2h = {0}\n".format(best5_d2h))
 
-    def find_best_n_neighbors_for_sc(self):
-        # Used to find to best parameter for spectral_clustering
 
-        import warnings
-        warnings.filterwarnings("ignore", message="Graph is not fully connected, spectral embedding may not work as expected.")
-
+    def find_best_kmeans_parameter(self):
+        # Used to find to best parameter for kmeans
         self.reset_to_default_seed()
-        self.the.file = "../data/auto93.csv"
-        #self.the.file = "../data/SS-A.csv"
-        #self.the.file = "../data/SS-B.csv"
-        #self.the.file = "../data/SS-C.csv"
-
-        print("Data file: {0}".format(self.the.file))
 
         d = DATA(self.the, self.the.file)
-
-        print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
 
         x_data_rows = []
         for row in d.rows:
@@ -1038,24 +976,187 @@ class Tests():
             x_data_rows.append(new_x_data)
 
         data_array = np.array(x_data_rows)
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
 
+        init_methods = ['k-means++', 'random']
+        max_iter_options = [100, 200]
+        best_scores = {method: -1 for method in init_methods}
+        best_params = {method: {} for method in init_methods}
+
+        for init in init_methods:
+            for max_iter in max_iter_options:
+                kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed)
+                labels = kmeans.fit_predict(data_array)
+                score = silhouette_score(data_array, labels)
+
+                if score > best_scores[init]:
+                    best_scores[init] = score
+                    best_params[init] = {'init': init, 'max_iter': max_iter}
+
+        # Calculate the percentage difference
+        score_plus = best_scores['k-means++']
+        score_random = best_scores['random']
+        if score_plus > score_random:
+            percentage_diff = ((score_plus - score_random) / score_random) * 100
+            message = f"'k-means++' is higher by {percentage_diff:.2f}% than 'random'"
+        else:
+            percentage_diff = ((score_random - score_plus) / score_plus) * 100
+            message = f"'random' is higher by {percentage_diff:.2f}% than 'k-means++'"
+
+        print("\n[{0}]".format(self.the.file))
+        print("Best parameters for 'k-means++':", best_params['k-means++'])
+        print("Best parameters for 'random':", best_params['random'])
+        print(message)
+        print("")
+
+    def find_best_n_neighbors_for_sc(self):
+        # Used to find to best parameter for spectral_clustering
+
+        import warnings
+        warnings.filterwarnings("ignore", message="Graph is not fully connected, spectral embedding may not work as expected.")
+
+        self.reset_to_default_seed()
+
+        print("Reading data")
+        d = DATA(self.the, self.the.file)
+        print("Data read complete")
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        print("Doing standardization")
+        data_array = np.array(x_data_rows)
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
+        print("Standardization Complete")
+
+        print("Dimension before PCA：", data_array.shape[1])
+        pca = PCA(n_components=0.9)
+        data_array = pca.fit_transform(data_array)
+        print("Dimension after PCA：", data_array.shape[1])
+
+        
         best_score = -1
-        best_n = 0
-        for n in range(10, 81, 10):
+        best_n_neighbors = 0
 
+        for n in range(50, 51, 5):
             try:
+                print("Start running with affinity = 'nearest_neighbors', neighbors = {0}".format(n))
                 model = SpectralClustering(n_clusters=2, affinity='nearest_neighbors', n_neighbors=n)
                 labels = model.fit_predict(data_array)
-            except Warning as e:
-                print("[n_neighbors = {0}]Spectral Clustering may not perform as expected due to data connectivity issues.".format(n))
+                score = silhouette_score(data_array, labels)
+                print("['rbf'] [neighbors = {0}] Score = {1}".format(n, score))
+                if score > best_score:
+                    best_score = score
+                    best_n_neighbors = n
+            except Exception as e:
+                print(f"[{n}] Spectral Clustering may not perform as expected: {str(e)}")
 
-            score = silhouette_score(data_array, labels)
-            if score > best_score:
-                best_score = score
-                best_n = n
+        print("\nBest silhouette score for 'rbf':", best_score, "with n_neighbors:", best_n_neighbors)
+        print("")
 
-        print("Best n_neighbors:", best_n)
-        print("Best silhouette score:", best_score)
+    def find_best_parameter_for_gaussian_mixtures(self):
+        # Used to find the best parameter for Gaussian Mixtures
+        self.reset_to_default_seed()
+        
+        d = DATA(self.the, self.the.file)
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
+
+        covariance_types = ['full', 'diag']
+        max_iters = [100, 200]
+
+        results = {}
+
+        for covariance_type in covariance_types:
+            results[covariance_type] = {'BIC': np.inf, 'Silhouette': -1}
+            for max_iter in max_iters:
+                gmm = GaussianMixture(n_components=2, covariance_type=covariance_type, max_iter=max_iter, random_state=0)
+                gmm.fit(data_array)
+                labels = gmm.predict(data_array)
+
+                bic = gmm.bic(data_array)
+                silhouette = silhouette_score(data_array, labels)
+
+                if bic < results[covariance_type]['BIC']:
+                    results[covariance_type]['BIC'] = bic
+                if silhouette > results[covariance_type]['Silhouette']:
+                    results[covariance_type]['Silhouette'] = silhouette
+
+        # Calculate the percentage difference
+        bic_diff = abs(results['full']['BIC'] - results['diag']['BIC']) / min(results['full']['BIC'], results['diag']['BIC']) * 100
+        silhouette_diff = abs(results['full']['Silhouette'] - results['diag']['Silhouette']) / min(results['full']['Silhouette'], results['diag']['Silhouette']) * 100
+
+        print("\n[{0}]".format(self.the.file))
+        print("Full covariance - BIC: {0}, Silhouette: {1}".format(results['full']['BIC'], results['full']['Silhouette']))
+        print("Diag covariance - BIC: {0}, Silhouette: {1}".format(results['diag']['BIC'], results['diag']['Silhouette']))
+        print("BIC percentage difference: {0:.2f}%".format(bic_diff))
+        print("Silhouette Score percentage difference: {0:.2f}%".format(silhouette_diff))
+        print("")
+
+
+    def find_best_DBSCAN_parameter(self):
+        # Used to find to best parameter for DBSCAN
+        self.reset_to_default_seed()
+
+        d = DATA(self.the, self.the.file)
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
+
+        print("Dimension before PCA：", data_array.shape[1])
+        pca = PCA(n_components=0.9)
+        data_array = pca.fit_transform(data_array)
+        print("Dimension after PCA：", data_array.shape[1])
+
+        # Parameter grids
+        epsilons = np.linspace(0.1, 1.0, num=10)  # Adjust range and step size based on domain knowledge
+        min_samples_options = range(2, 10)  # Adjust range based on expected dataset density
+
+        best_score = -1
+        best_params = {}
+
+        for eps in epsilons:
+            for min_samples in min_samples_options:
+                dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+                labels = dbscan.fit_predict(data_array)
+                num_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+                # Compute silhouette score for the effective clustering
+                if len(set(labels)) > 1:  # Ensure there is more than one cluster (excluding noise)
+                    score = silhouette_score(data_array, labels)
+                    if score > best_score:
+                        best_score = score
+                        best_params = {'eps': eps, 'min_samples': min_samples, 'num_clusters': num_clusters}
+
+        # Output best parameters
+        print("\n[{0}]".format(self.the.file))
+        print(f"Best epsilon: {best_params['eps']}")
+        print(f"Best min_samples: {best_params['min_samples']}")
+        print(f"num_clusters: {best_params['num_clusters']}")
+        print(f"Best Silhouette Score: {best_score:.2f}\n")
 
     def test_spectral_clustering(self):
         DEFAULT_BEST_N_NEIGHBORS = 50
@@ -1069,8 +1170,6 @@ class Tests():
         d = DATA(self.the, self.the.file)
 
         print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
 
         x_data_rows = []
         for row in d.rows:
@@ -1127,62 +1226,6 @@ class Tests():
             best = b_data
             rest = a_data
 
-    def find_best_parameter_for_gaussian_mixtures(self):
-        # Used to find to best parameter for spectral_clustering
-        self.reset_to_default_seed()
-        self.the.file = "../data/auto93.csv"
-        #self.the.file = "../data/SS-A.csv"
-        #self.the.file = "../data/SS-B.csv"
-        #self.the.file = "../data/SS-C.csv"
-
-        print("Data file: {0}".format(self.the.file))
-
-        d = DATA(self.the, self.the.file)
-
-        print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
-
-        x_data_rows = []
-        for row in d.rows:
-            new_x_data = []
-            for x_field in d.cols.x:
-                new_x_data.append(row.cells[x_field.at])
-            x_data_rows.append(new_x_data)
-
-        data_array = np.array(x_data_rows)
-
-        covariance_types = ['full', 'tied', 'diag', 'spherical']
-        tols = [0.001, 0.01, 0.1]
-        max_iters = [100, 200, 300]
-
-        best_gmm = None
-        lowest_bic = np.inf
-
-        best_covariance_type = None
-        best_tol = None
-        best_max_iter = None
-
-        for covariance_type in covariance_types:
-            for tol in tols:
-                for max_iter in max_iters:
-                    gmm = GaussianMixture(n_components=2, covariance_type=covariance_type,
-                                          tol=tol, max_iter=max_iter, random_state=0)
-                    gmm.fit(data_array)
-
-                    bic = gmm.bic(data_array)
-                    if bic < lowest_bic:
-                        lowest_bic = bic
-                        best_gmm = gmm
-                        best_covariance_type = covariance_type
-                        best_tol = tol
-                        best_max_iter = max_iter
-
-        print("Best GMM:", best_gmm)
-        print("best_covariance_type = {0}".format(best_covariance_type))
-        print("best_tol = {0}".format(best_tol))
-        print("best_max_iter = {0}".format(best_max_iter))
-
     def test_gaussian_mixtures(self):
         DEFAULT_COVARIANCE_TYPE = "full"
         DEFAULT_MAX_ITER = 100
@@ -1196,8 +1239,6 @@ class Tests():
         d = DATA(self.the, self.the.file)
 
         print("Size of data: {0}".format(len(d.rows)))
-
-        import numpy as np
 
         x_data_rows = []
         for row in d.rows:
@@ -1256,6 +1297,28 @@ class Tests():
             best = b_data
             rest = a_data
 
+    def test_pca(self):
+        self.reset_to_default_seed()
+
+        d = DATA(self.the, self.the.file)
+
+        x_data_rows = []
+        for row in d.rows:
+            new_x_data = []
+            for x_field in d.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+        scaler = StandardScaler()
+        data_array = scaler.fit_transform(data_array)
+
+        print("[{0}] Dimension before PCA： {1}".format(self.the.file, data_array.shape[1]))
+        pca = PCA(n_components=0.9)
+        data_array = pca.fit_transform(data_array)
+        print("[{0}] Dimension after PCA： {1}".format(self.the.file, data_array.shape[1]))
+
+
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         REPEAT_TIME = 20
@@ -1268,7 +1331,7 @@ class Tests():
         # self.the.file = "../data/SS-F.csv"  #  197 rows
         # self.the.file = "../data/SS-G.csv"  #  197 rows
         # self.the.file = "../data/SS-H.csv"  #  260 rows
-        self.the.file = "../data/SS-I.csv"  #  1081 rows
+        # self.the.file = "../data/SS-I.csv"  #  1081 rows
         # self.the.file = "../data/SS-J.csv"  #  3841 rows
         # self.the.file = "../data/SS-K.csv"  #  2881 rows
         # self.the.file = "../data/SS-L.csv"  #  1024 rows
@@ -1319,7 +1382,7 @@ class Tests():
 
         for i in range(REPEAT_TIME):
             self.reset_to_default_seed()
-            print("\n[Itertation {0}]".format(i))
+            # print("\n[Itertation {0}]".format(i + 1))
 
             d = DATA(self.the, self.the.file)
 
@@ -1397,21 +1460,20 @@ class Tests():
                         cluserting_algo_type = "projection"
                     elif clustering_algo == "kmeans":
                         cluserting_algo_type = "kmeans"
-                        clustering_parameter_dict["init"] = "k-means++"
-                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 300
+                        clustering_parameter_dict["init"] = "k-means++"  # Don't change this one
+                        clustering_parameter_dict["max_iter"] = 100  # Don't change this one
                     elif clustering_algo == "sc":
                         cluserting_algo_type = "spectral_clustering"
                         clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
-                        clustering_parameter_dict["n_neighbors"] = 50  # sklearn's default value is 10
+                        clustering_parameter_dict["n_neighbors"] = 10  # sklearn's default value is 10
                     elif clustering_algo == "gm":
                         cluserting_algo_type = "gaussian_mixtures"
-                        clustering_parameter_dict["covariance_type"] = "full"  # sklearn's default value is "full"
-                        clustering_parameter_dict["max_iter"] = 100  # sklearn's default value is 100
+                        clustering_parameter_dict["covariance_type"] = "diag"  # Don't change this one
+                        clustering_parameter_dict["max_iter"] = 100  # Don't change this one
                     else:
                         raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
 
                     best, rest, evals  = d.rrp(cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
-
 
                     d2h_list.append(best.mid().d2h(d))
                     stat_dict[test_type] = d2h_list
