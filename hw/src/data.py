@@ -2,13 +2,16 @@ from Utility import Utility
 from ROW import ROW
 from COLS import Cols as COLS
 from node import NODE
+import math
 import random
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
-
+from sklearn.preprocessing import StandardScaler
 # ----------------------------------------------------------------------------
 # Data Class
 
@@ -97,6 +100,7 @@ class DATA:
         return new
     
     def gate(self, budget0, budget, some, clustering_method=None):
+        random.seed(self.the.seed)
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
@@ -119,6 +123,7 @@ class DATA:
         return stats, bests
     
     def gate2(self, budget0, budget, some, clustering_method=None):
+        random.seed(self.the.seed)
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
@@ -185,7 +190,7 @@ class DATA:
         return DATA(self.the, best), DATA(self.the, rest)
 
 
-    def split_row_with_kmeans(self, rows, init='k-means++', max_iter=100):
+    def split_row_with_kmeans(self, rows, init='k-means++', max_iter=100, need_standardlize=False):
         x_data_rows = []
         for row in rows:
             new_x_data = []
@@ -194,6 +199,10 @@ class DATA:
             x_data_rows.append(new_x_data)
 
         data_array = np.array(x_data_rows)
+
+        if need_standardlize:
+            scaler = StandardScaler()
+            data_array = scaler.fit_transform(data_array)
 
         kmeans = KMeans(n_clusters=2, init=init, max_iter=max_iter, random_state=self.the.seed, n_init=1)
         kmeans.fit(data_array)
@@ -230,7 +239,7 @@ class DATA:
 
         return best.rows, rest.rows, best.mid(), rest.mid()
 
-    def split_row_with_spectral_clustering(self, rows, affinity='nearest_neighbors', n_neighbors=50):
+    def split_row_with_spectral_clustering(self, rows, affinity='nearest_neighbors', n_neighbors=50, need_standardlize=False):
         x_data_rows = []
         for row in rows:
             new_x_data = []
@@ -239,6 +248,10 @@ class DATA:
             x_data_rows.append(new_x_data)
 
         data_array = np.array(x_data_rows)
+
+        if need_standardlize:
+            scaler = StandardScaler()
+            data_array = scaler.fit_transform(data_array)
 
         if len(data_array) < n_neighbors:
             n_neighbors = int(len(data_array) ** 0.5)
@@ -277,7 +290,7 @@ class DATA:
 
         return best.rows, rest.rows, best.mid(), rest.mid()
 
-    def split_row_with_gaussian_mixtures(self, rows, covariance_type='full', max_iter=100):
+    def split_row_with_gaussian_mixtures(self, rows, covariance_type='full', max_iter=100, need_standardlize=False):
         x_data_rows = []
         for row in rows:
             new_x_data = []
@@ -287,11 +300,74 @@ class DATA:
 
         data_array = np.array(x_data_rows)
 
+        if need_standardlize:
+            scaler = StandardScaler()
+            data_array = scaler.fit_transform(data_array)
+
         model = GaussianMixture(n_components=2, covariance_type=covariance_type, max_iter=max_iter, random_state=self.the.seed)
 
         model.fit(data_array)
 
         labels = model.predict(data_array)
+
+        a = [self.cols.names]
+        b = [self.cols.names]
+
+        for index, row in enumerate(rows):
+            if labels[index] == 0:
+                a.append(row)
+            else:
+                b.append(row)
+
+        a_data = DATA(self.the, a)
+        b_data = DATA(self.the, b)
+
+        a_mid_row = a_data.mid()
+        b_mid_row = b_data.mid()
+
+        a_mid_row_cells = [round(a_mid_row.cells[field.at], 2) for field in self.cols.all]
+        b_mid_row_cells = [round(b_mid_row.cells[field.at], 2) for field in self.cols.all]
+
+        a_d2h = a_data.mid().d2h(self)
+        b_d2h = b_data.mid().d2h(self)
+
+        if a_d2h <= b_d2h:
+            best = a_data
+            rest = b_data
+        else:
+            best = b_data
+            rest = a_data
+
+        return best.rows, rest.rows, best.mid(), rest.mid()
+
+    def split_row_with_DBSCAN(self, rows, epsilon=0.3, min_samples=2, need_standardlize=False):
+        x_data_rows = []
+        for row in rows:
+            new_x_data = []
+            for x_field in self.cols.x:
+                new_x_data.append(row.cells[x_field.at])
+            x_data_rows.append(new_x_data)
+
+        data_array = np.array(x_data_rows)
+
+        if need_standardlize:
+            scaler = StandardScaler()
+            data_array = scaler.fit_transform(data_array)
+
+
+        dbscan = DBSCAN(eps=epsilon, min_samples=min_samples)
+        dbscan_clusters = dbscan.fit_predict(X)
+
+        n_clusters_dbscan = len(set(dbscan_clusters)) - (1 if -1 in dbscan_clusters else 0)
+
+        if n_clusters_dbscan > 2:
+            # 'DBSCAN followed by K-Means'
+            kmeans = KMeans(n_clusters=2, random_state=self.the.seed)
+            kmeans_clusters = kmeans.fit_predict(X)
+            labels = kmeans_clusters
+        else:
+            # 'DBSCAN only'
+            labels = dbscan_clusters
 
         a = [self.cols.names]
         b = [self.cols.names]
@@ -387,9 +463,12 @@ class DATA:
     def rrp(self, rows=None, stop=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
         import warnings
         warnings.filterwarnings("ignore", category=UserWarning)
-        random.seed(self.the.seed)
         rows = rows or self.rows
-        stop = stop or len(rows) ** 0.5
+        need_standardlize = False
+        if not stop:
+            # First time init
+            random.seed(self.the.seed)
+        stop = stop or 2 * len(rows) ** 0.5
         rest = rest or []
         if len(rows) > stop:
             if cluserting_algo_type == "projection":
@@ -409,6 +488,7 @@ class DATA:
                 if max_iter:
                     kwargs['max_iter'] = max_iter
 
+                kwargs["need_standardlize"] = need_standardlize
                 lefts, rights, left, right  = self.split_row_with_kmeans(rows, **kwargs)
             elif cluserting_algo_type == "spectral_clustering":
                 affinity = clustering_parameter_dict.get("affinity")
@@ -420,6 +500,7 @@ class DATA:
                 if n_neighbors:
                     kwargs['n_neighbors'] = n_neighbors
 
+                kwargs["need_standardlize"] = need_standardlize
                 lefts, rights, left, right  = self.split_row_with_spectral_clustering(rows, **kwargs)
             elif cluserting_algo_type == "gaussian_mixtures":
                 covariance_type = clustering_parameter_dict.get("covariance_type")
@@ -430,13 +511,101 @@ class DATA:
                 if max_iter:
                     kwargs['max_iter'] = max_iter
 
+                kwargs["need_standardlize"] = need_standardlize
                 lefts, rights, left, right  = self.split_row_with_gaussian_mixtures(rows, **kwargs)
+            elif cluserting_algo_type == "agglomerative_clustering":
+                linkage = clustering_parameter_dict.get("linkage")
+                affinity = clustering_parameter_dict.get("affinity")
+                kwargs = {}
+                if linkage:
+                    kwargs['linkage'] = linkage
+                if affinity:
+                    kwargs['affinity'] = affinity
+
+                kwargs["need_standardlize"] = need_standardlize
+                lefts, rights, left, right  = self.split_row_with_agglomerative_clustering(rows, **kwargs)
+            elif cluserting_algo_type == "DBSCAN_clustering":
+                epsilon = clustering_parameter_dict.get("epsilon")
+                min_samples = clustering_parameter_dict.get("min_samples")
+                kwargs = {}
+                if epsilon:
+                    kwargs['epsilon'] = epsilon
+                if min_samples:
+                    kwargs['min_samples'] = min_samples
+
+                kwargs["need_standardlize"] = need_standardlize
+                lefts, rights, left, right  = self.split_row_with_DBSCAN(rows, **kwargs)
+            else:
+                raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(cluserting_algo_type))
+            return self.rrp(lefts, stop, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
+        else:
+            if is_debug:
+                print("[{0}] [stop = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, math.ceil(stop), self.the.seed, len(rows)))
+            return self.clone(rows), self.clone(rest), evals
+
+
+    def rrp_with_depth(self, rows=None, stopping_eval=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
+        rows = rows or self.rows
+        rest = rest or []
+        if evals <= stopping_eval and len(rows) >= 2:
+            if cluserting_algo_type == "projection":
+                try:
+                    lefts, rights, left, right  = self.half(rows, True, before)
+                except ZeroDivisionError as e:
+                    print("row size = {0}".format(len(rows)))
+                    raise e
+            elif cluserting_algo_type == "kmeans":
+                init = clustering_parameter_dict.get("init")
+                max_iter = clustering_parameter_dict.get("max_iter")
+
+                kwargs = {}
+                if init:
+                    kwargs['init'] = init
+                if max_iter:
+                    kwargs['max_iter'] = max_iter
+
+                lefts, rights, left, right  = self.split_row_with_kmeans(rows, **kwargs)
+                print("-----------------")
+                print("[k-means] [evals = {0}] Size of bests: {1}".format(evals, len(lefts)))
+                print("[k-means] [evals = {0}] Size of rests: {1}".format(evals, len(rights)))
+                print("-----------------\n")
+            elif cluserting_algo_type == "spectral_clustering":
+                affinity = clustering_parameter_dict.get("affinity")
+                n_neighbors = clustering_parameter_dict.get("n_neighbors")
+
+                kwargs = {}
+                if affinity:
+                    kwargs['affinity'] = affinity
+                if n_neighbors:
+                    kwargs['n_neighbors'] = n_neighbors
+
+                lefts, rights, left, right  = self.split_row_with_spectral_clustering(rows, **kwargs)
+                print("-----------------")
+                print("[SC] [evals = {0}] Size of bests: {1}".format(evals, len(lefts)))
+                print("[SC] [evals = {0}] Size of rests: {1}".format(evals, len(rights)))
+                print("-----------------\n")
+            elif cluserting_algo_type == "gaussian_mixtures":
+                covariance_type = clustering_parameter_dict.get("covariance_type")
+                max_iter = clustering_parameter_dict.get("max_iter")
+                kwargs = {}
+                if covariance_type:
+                    kwargs['covariance_type'] = covariance_type
+                if max_iter:
+                    kwargs['max_iter'] = max_iter
+
+                lefts, rights, left, right  = self.split_row_with_gaussian_mixtures(rows, **kwargs)
+                print("-----------------")
+                print("[GM] [evals = {0}] Size of bests: {1}".format(evals, len(lefts)))
+                print("[GM] [evals = {0}] Size of rests: {1}".format(evals, len(rights)))
+                print("-----------------\n")
             else:
                 raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(cluserting_algo_type))
 
-            return self.rrp(lefts, stop, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
+            return self.rrp_with_depth(lefts, stopping_eval, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
         else:
-            print("[{0}] [stop = {1}] Result is done, seed = {2}".format(cluserting_algo_type, stop, self.the.seed))
+            print("[{0}] [evals = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, stopping_eval, self.the.seed, len(rows)))
             return self.clone(rows), self.clone(rest), evals
     
     def recursive_kmeans(self, arg_eval, data=None, evals=1):

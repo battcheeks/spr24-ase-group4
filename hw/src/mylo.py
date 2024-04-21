@@ -121,8 +121,14 @@ def main():
         test.test_gaussian_mixtures()
     elif args.task == "gm_opt":
         test.find_best_parameter_for_gaussian_mixtures()
+    elif args.task == "db_opt":
+        test.find_best_DBSCAN_parameter()
+    elif args.task == "pca":
+        test.test_pca()
     elif args.task == "rrp":
         test.test_generalize_rrp()
+    elif args.task == "rrp_p":
+        test.test_generalize_rrp_parallel()
     elif args.task == "new_rrp":
         test.test_new_rrp()
     elif args.task == "all":

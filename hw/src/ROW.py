@@ -19,6 +19,14 @@ class ROW:
     
     #like()
 
+
+    """
+    def loglike(i, lst, nall, nh, m,k):
+        prior = (len(i.rows) + k) / (nall + k*nh)
+        likes = [c.like(lst[c.at],m,prior) for c in i.cols.x if lst[c.at] != "?"]
+        return sum(math.log(x) for x in likes + [prior] if x>0)
+    """
+
     def like(self, data, n, nHypotheses):
         prior = (len(data.rows) + self.the.k) / (n + self.the.k * nHypotheses)
         out = math.log(prior)
@@ -31,8 +39,8 @@ class ROW:
                     out += math.log(inc)
                 except ValueError:
                     return 0.0
-
-        return math.exp(1) ** out
+        # return exp(1) ** out
+        return out
 
     """
     function ROW:d2h(data, d, n)
