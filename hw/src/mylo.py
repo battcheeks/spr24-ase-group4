@@ -127,6 +127,8 @@ def main():
         test.test_pca()
     elif args.task == "rrp":
         test.test_generalize_rrp()
+    elif args.task == "rrp_p":
+        test.test_generalize_rrp_parallel()
     elif args.task == "new_rrp":
         test.test_new_rrp()
     elif args.task == "all":

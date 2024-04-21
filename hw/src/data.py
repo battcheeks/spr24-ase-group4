@@ -100,6 +100,7 @@ class DATA:
         return new
     
     def gate(self, budget0, budget, some, clustering_method=None):
+        random.seed(self.the.seed)
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
@@ -122,6 +123,7 @@ class DATA:
         return stats, bests
     
     def gate2(self, budget0, budget, some, clustering_method=None):
+        random.seed(self.the.seed)
         stats = []
         bests = []
         rows = self.util.shuffle(self.rows)
@@ -461,10 +463,12 @@ class DATA:
     def rrp(self, rows=None, stop=None, rest=None, evals=1, before=None, cluserting_algo_type="projection", clustering_parameter_dict=None):
         import warnings
         warnings.filterwarnings("ignore", category=UserWarning)
-        random.seed(self.the.seed)
         rows = rows or self.rows
-        need_standardlize = True
-        stop = stop or 2 * len(rows) ** (1/2)
+        need_standardlize = False
+        if not stop:
+            # First time init
+            random.seed(self.the.seed)
+        stop = stop or 2 * len(rows) ** 0.5
         rest = rest or []
         if len(rows) > stop:
             if cluserting_algo_type == "projection":
@@ -535,7 +539,8 @@ class DATA:
                 raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(cluserting_algo_type))
             return self.rrp(lefts, stop, rest+rights, evals+1, left, cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
         else:
-            # print("[{0}] [stop = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, math.ceil(stop), self.the.seed, len(rows)))
+            if is_debug:
+                print("[{0}] [stop = {1}] Result is done, seed = {2}, final row count = {3}".format(cluserting_algo_type, math.ceil(stop), self.the.seed, len(rows)))
             return self.clone(rows), self.clone(rest), evals
 
 

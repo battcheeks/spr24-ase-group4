@@ -22,6 +22,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import time
 import numpy as np
+import multiprocessing
+
+is_debug = False
 
 class Tests():
     def __init__(self, the) -> None:
@@ -1319,25 +1322,195 @@ class Tests():
         print("[{0}] Dimension after PCA： {1}".format(self.the.file, data_array.shape[1]))
 
 
+    def run_single_test(self, test_type, repeat_time):
+        import copy
+        setting = copy.deepcopy(self.the)
+
+        d2h_list = []
+        complete_time_list = []
+
+        for i in range(repeat_time):
+            d = DATA(setting, self.the.file)
+            start_time = time.time()
+            # print("[{0}] Start doing {1}".format(self.the.file, test_type))
+            if test_type.startswith("base"):
+                return None
+            elif test_type.startswith("bonr"):
+                match = re.search(r'\d+', test_type)
+                if not match:
+                    continue
+                total_budget = int(match.group())
+
+                budget0 = 4
+                budget = total_budget - budget0
+                some = 0.5
+
+                d = DATA(setting, self.the.file)
+                _, bests = d.gate(budget0, budget, some)
+                bests.sort(key=lambda a: a.d2h(d))
+                d2h_list.append(round(bests[0].d2h(d), 2))
+                if is_debug:
+                    print("[{0}] Result is done, seed = {1}".format(test_type, d.the.seed))
+
+            elif test_type.startswith("b/r"):
+                match = re.search(r'\d+', test_type)
+                if not match:
+                    continue
+                total_budget = int(match.group())
+
+                budget0 = 4
+                budget = total_budget - budget0
+                some = 0.5
+
+                d = DATA(setting, self.the.file)
+                _, bests = d.gate2(budget0, budget, some)
+                bests.sort(key=lambda a: a.d2h(d))
+                d2h_list.append(round(bests[0].d2h(d), 2))
+                if is_debug:
+                    print("[{0}] Result is done, seed = {1}".format(test_type, d.the.seed))
+            elif test_type[0] == 'b' and test_type[1:].isdigit():
+                match = re.search(r'\d+', test_type)
+                if not match:
+                    continue
+                total_budget = int(match.group())
+
+                budget0 = 4
+                budget = total_budget - budget0
+                some = 0.5
+
+                d = DATA(setting, self.the.file)
+                _, bests = d.gate(budget0, budget, some, acquisition_type="b")
+                bests.sort(key=lambda a: a.d2h(d))
+                d2h_list.append(round(bests[0].d2h(d), 2))
+                if is_debug:
+                    print("[{0}] Result is done, seed = {1}".format(test_type, d.the.seed))
+            elif test_type.startswith("rrp"):
+                match = re.search(r'rrp_(\w+)', test_type)
+                if not match:
+                    continue
+
+                # tree_depth = int(match.group(1))
+                clustering_algo = match.group(1)
+                clustering_parameter_dict = {}
+                cluserting_algo_type = None
+
+                if clustering_algo == "projection":
+                    cluserting_algo_type = "projection"
+                elif clustering_algo == "kmeans":
+                    cluserting_algo_type = "kmeans"
+                    clustering_parameter_dict["init"] = "k-means++"  # Don't change this one
+                    clustering_parameter_dict["max_iter"] = 100  # Don't change this one
+                elif clustering_algo == "sc":
+                    cluserting_algo_type = "spectral_clustering"
+                    clustering_parameter_dict["affinity"] = "nearest_neighbors"  # sklearn's default value is "rbf"
+                    clustering_parameter_dict["n_neighbors"] = 10  # sklearn's default value is 10
+                elif clustering_algo == "gm":
+                    cluserting_algo_type = "gaussian_mixtures"
+                    clustering_parameter_dict["covariance_type"] = "diag"  # Don't change this one
+                    clustering_parameter_dict["max_iter"] = 100  # Don't change this one
+                else:
+                    raise RuntimeError("Unsupported Clustering Algorithm: {0}".format(clustering_algo))
+
+                best, rest, evals  = d.rrp(cluserting_algo_type=cluserting_algo_type, clustering_parameter_dict=clustering_parameter_dict)
+
+                d2h_list.append(best.mid().d2h(d))
+            elif test_type.startswith("rand"):
+                match = re.search(r'\d+', test_type)
+                if not match:
+                    continue
+                budget = int(match.group())
+
+                d = DATA(setting, self.the.file)
+                best_d2h_in_random_rows = self._get_best_d2h_with_rand(d, budget)
+                d2h_list.append(round(best_d2h_in_random_rows, 2))
+            else:
+                # Unsupported type
+                continue
+
+            setting.seed += 1
+            end_time = time.time()
+            total_time = end_time - start_time
+            complete_time_list.append(round(total_time, 4))
+        return test_type, d2h_list, complete_time_list
+
+    def test_generalize_rrp_parallel(self):
+        self.reset_to_default_seed()
+        REPEAT_TIME = 20
+        d = DATA(self.the, self.the.file)
+
+        print("date : {0}".format(datetime.now().strftime("%d/%m/%Y %H:%M:%S")))
+        print("file : {0}".format(self.the.file))
+        print("repeats : {0}".format(REPEAT_TIME))
+        print("seed : {0}".format(self.the.seed))
+        print("rows : {0}".format(len(d.rows)))
+        print("cols : {0}".format(len(d.cols.names.cells)))
+
+        # Best
+        sorted_d = sorted(d.rows, key=lambda a: a.d2h(d))
+        print("best : {0}".format(round(sorted_d[0].d2h(d), 2)))
+
+        # Tiny
+        d2h_values = [row.d2h(d) for row in d.rows]
+        mean = sum(d2h_values) / len(d2h_values)
+        squared_diffs = [(x - mean) ** 2 for x in d2h_values]
+        mean_squared_diff = sum(squared_diffs) / len(squared_diffs)
+        standard_deviation = (mean_squared_diff) ** 0.5
+        tiny_value = 0.35 * standard_deviation
+        print("tiny : {0}".format(round(tiny_value, 2)))
+
+        test_case = ["base", "bonr9", "bonr15", "bonr25", "bonr35", "bonr45",
+                     "b/r9", "b/r15", "b/r25", "b/r35", "b/r45",
+                     "rrp_projection", "rrp_kmeans", "rrp_sc", "rrp_gm","rand9", "rand15", "rand25", "rand35", "rand358"]
+
+        # test_case = ["base", "bonr9", "rand9", "bonr15", "rand15", "bonr20", "rand20", "rand358", "bonr30", "bonr40", "bonr50", "bonr60"]
+        test_case_n = len(test_case)
+
+        test_case_output = ' '.join(f"#{item}" for item in test_case)
+        print(test_case_output)
+        print("#report{0}".format(test_case_n))
+
+        pool = multiprocessing.Pool(processes=6)
+        tasks = [pool.apply_async(self.run_single_test, args=(test_type, REPEAT_TIME)) for test_type in test_case]
+
+        pool.close()
+        pool.join()
+
+        stat_dict = {}
+        complete_time_dict = {}
+
+        d = DATA(self.the, self.the.file)
+        d2h_list = [round(row.d2h(d), 2) for row in d.rows]
+        stat_dict["base"] = d2h_list
+
+        for task in tasks:
+            result = task.get()
+            if result:
+                test_type, d2h_values, complte_time_list = result
+                stat_dict[test_type] = d2h_values
+                complete_time_dict[test_type] = complte_time_list
+                #print(f"results: {d2h_values}, completed in {complte_time_list} seconds")
+
+        import os
+        print("\n--------------------------------------------------------------------------------\n")
+        print("[{0}] Statistics for the centroid's d2h value in the best cluster of each algorithm\n".format(os.path.basename(self.the.file)))
+
+        slurp_list = []
+        for key, item in stat_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
+
+        print("\n\n--------------------------------------------------------------------------------")
+        print("[{0}] Statistics of the completion time for each algorithm (Unit: seconds)\n".format(os.path.basename(self.the.file)))
+
+        slurp_list = []
+        for key, item in complete_time_dict.items():
+            slurp_list.append(stats.SAMPLE(item, key))
+        eg0(slurp_list)
+
+
     def test_generalize_rrp(self):
         self.reset_to_default_seed()
         REPEAT_TIME = 20
-        # self.the.file = "../data/auto93.csv"  # 398 rows
-        # self.the.file = "../data/SS-A.csv"  #  1344 rows
-        # self.the.file = "../data/SS-B.csv"  #  207 rows
-        # self.the.file = "../data/SS-C.csv"  #  1513 rows
-        # self.the.file = "../data/SS-D.csv"  #  197 rows
-        # self.the.file = "../data/SS-E.csv"  #  757 rows
-        # self.the.file = "../data/SS-F.csv"  #  197 rows
-        # self.the.file = "../data/SS-G.csv"  #  197 rows
-        # self.the.file = "../data/SS-H.csv"  #  260 rows
-        # self.the.file = "../data/SS-I.csv"  #  1081 rows
-        # self.the.file = "../data/SS-J.csv"  #  3841 rows
-        # self.the.file = "../data/SS-K.csv"  #  2881 rows
-        # self.the.file = "../data/SS-L.csv"  #  1024 rows
-        # self.the.file = "../data/SS-M.csv"  #  239361 rows
-        # self.the.file = "../data/SS-N.csv"  #  53663 rows
-        # self.the.file = "../data/SS-O.csv"  #  65425 rows
 
         d = DATA(self.the, self.the.file)
 
@@ -1389,6 +1562,8 @@ class Tests():
             for test_type in test_case:
                 start_time = time.time()
                 complete_time_list = complete_time_dict.get(test_type, [])
+
+                # print("[{0}] Start doing {1}".format(self.the.file, test_type))
                 if test_type.startswith("base"):
                     continue
                 elif test_type.startswith("bonr"):
@@ -1497,6 +1672,7 @@ class Tests():
                 total_time = end_time - start_time
                 complete_time_list.append(round(total_time, 4))
                 complete_time_dict[test_type] = complete_time_list
+                # print("[{0}] {1} has completed\n".format(self.the.file, test_type))
                 #print("[{0}] Complete in {1:.3f} seconds\n".format(test_type, total_time))
 
             self.the.seed += 1
