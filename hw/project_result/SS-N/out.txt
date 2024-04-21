@@ -1,0 +1,10 @@
+date : 21/04/2024 16:42:24
+file : ./data/standardize_data/SS-N.csv
+repeats : 20
+seed : 31210
+rows : 53662
+cols : 19
+best : 0.0
+tiny : 0.02
+#base #bonr9 #bonr15 #bonr25 #bonr35 #bonr45 #b/r9 #b/r15 #b/r25 #b/r35 #b/r45 #rrp_projection #rrp_kmeans #rrp_sc #rrp_gm #rand9 #rand15 #rand25 #rand35 #rand358
+#report20
